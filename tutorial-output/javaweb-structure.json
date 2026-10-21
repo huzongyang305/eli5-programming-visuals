@@ -1,0 +1,200 @@
+{
+  "tutorial_title": "JavaWeb开发完整教程",
+  "description": "从零开始掌握JavaWeb开发核心技术，涵盖Servlet、JSP、HTTP协议等核心概念",
+  "total_estimated_time": 1800,
+  "concepts": [
+    {
+      "concept_name": "HTTP协议基础",
+      "description": "理解Web通信的基础协议，包括请求/响应模型、状态码、请求方法等核心概念",
+      "prerequisites": [],
+      "difficulty": 2,
+      "estimated_time": 120,
+      "key_technologies": [
+        "HTTP/1.1与HTTP/2",
+        "GET/POST/PUT/DELETE方法",
+        "状态码(200/301/404/500)",
+        "请求头与响应头",
+        "URL结构与参数传递"
+      ]
+    },
+    {
+      "concept_name": "Servlet技术",
+      "description": "Java Web应用的核心组件，处理客户端请求并生成动态响应",
+      "prerequisites": ["HTTP协议基础"],
+      "difficulty": 3,
+      "estimated_time": 240,
+      "key_technologies": [
+        "HttpServlet基类",
+        "doGet/doPost方法",
+        "HttpServletRequest对象",
+        "HttpServletResponse对象",
+        "ServletContext生命周期",
+        "web.xml配置与注解"
+      ]
+    },
+    {
+      "concept_name": "JSP页面技术",
+      "description": "Java Server Pages，用于在HTML中嵌入Java代码生成动态网页",
+      "prerequisites": ["Servlet技术"],
+      "difficulty": 3,
+      "estimated_time": 180,
+      "key_technologies": [
+        "JSP语法与指令",
+        "脚本元素(scriptlet/expression/declaration)",
+        "JSP内置对象(out/request/response/session/application)",
+        "JSP动作标签",
+        "JSP编译原理",
+        "JSP与Servlet的关系"
+      ]
+    },
+    {
+      "concept_name": "EL表达式",
+      "description": "Expression Language，简化JSP页面中的数据访问和显示",
+      "prerequisites": ["JSP页面技术"],
+      "difficulty": 2,
+      "estimated_time": 90,
+      "key_technologies": [
+        "${}表达式语法",
+        "隐式对象(pageContext/request/session/application)",
+        "运算符(算术/关系/逻辑)",
+        "访问Bean属性",
+        "集合与数组访问"
+      ]
+    },
+    {
+      "concept_name": "JSTL标签库",
+      "description": "JSP Standard Tag Library，提供标准标签简化JSP开发",
+      "prerequisites": ["EL表达式"],
+      "difficulty": 2,
+      "estimated_time": 120,
+      "key_technologies": [
+        "核心标签库(c:forEach/c:if/c:choose)",
+        "格式化标签库(fmt:formatDate/fmt:formatNumber)",
+        "函数标签库(fn:length/fn:substring)",
+        "SQL标签库",
+        "XML标签库",
+        "自定义标签开发"
+      ]
+    },
+    {
+      "concept_name": "Session与Cookie",
+      "description": "Web会话管理技术，实现用户状态跟踪和数据持久化",
+      "prerequisites": ["Servlet技术", "HTTP协议基础"],
+      "difficulty": 3,
+      "estimated_time": 150,
+      "key_technologies": [
+        "Cookie创建与读取",
+        "Cookie属性(maxAge/path/domain)",
+        "HttpSession对象",
+        "session.setAttribute/getAttribute",
+        "session超时配置",
+        "URL重写技术",
+        "Session固定攻击防护"
+      ]
+    },
+    {
+      "concept_name": "过滤器(Filter)",
+      "description": "拦截请求和响应的组件，实现横切关注点如编码、权限验证等",
+      "prerequisites": ["Servlet技术"],
+      "difficulty": 3,
+      "estimated_time": 150,
+      "key_technologies": [
+        "Filter接口实现",
+        "doFilter方法链",
+        "FilterChain对象",
+        "web.xml配置与@WebFilter注解",
+        "过滤器执行顺序",
+        "字符编码过滤器",
+        "权限验证过滤器",
+        "日志记录过滤器"
+      ]
+    },
+    {
+      "concept_name": "监听器(Listener)",
+      "description": "监听Web应用中特定事件的发生，实现资源初始化和状态监控",
+      "prerequisites": ["Servlet技术", "Session与Cookie"],
+      "difficulty": 3,
+      "estimated_time": 120,
+      "key_technologies": [
+        "ServletContextListener",
+        "HttpSessionListener",
+        "ServletRequestListener",
+        "属性变化监听器",
+        "@WebListener注解",
+        "在线人数统计实现",
+        "应用启动初始化"
+      ]
+    },
+    {
+      "concept_name": "JDBC数据库访问",
+      "description": "Java Database Connectivity，实现Java应用与数据库的交互",
+      "prerequisites": ["Servlet技术"],
+      "difficulty": 4,
+      "estimated_time": 240,
+      "key_technologies": [
+        "DriverManager加载驱动",
+        "Connection连接管理",
+        "Statement与PreparedStatement",
+        "ResultSet结果集处理",
+        "事务管理(commit/rollback)",
+        "连接池技术(DBCP/C3P0/HikariCP)",
+        "SQL注入防护",
+        "DAO设计模式"
+      ]
+    },
+    {
+      "concept_name": "MVC设计模式",
+      "description": "Model-View-Controller架构模式，分离业务逻辑、数据展示和控制流程",
+      "prerequisites": ["Servlet技术", "JSP页面技术", "JDBC数据库访问", "Session与Cookie"],
+      "difficulty": 4,
+      "estimated_time": 180,
+      "key_technologies": [
+        "Model层(JavaBean/实体类)",
+        "View层(JSP/EL/JSTL)",
+        "Controller层(Servlet)",
+        "三层架构分层",
+        "Service业务逻辑层",
+        "DAO数据访问层",
+        "前端控制器模式",
+        "依赖注入思想"
+      ]
+    }
+  ],
+  "learning_path": [
+    "HTTP协议基础",
+    "Servlet技术",
+    "JSP页面技术",
+    "EL表达式",
+    "JSTL标签库",
+    "Session与Cookie",
+    "过滤器(Filter)",
+    "监听器(Listener)",
+    "JDBC数据库访问",
+    "MVC设计模式"
+  ],
+  "recommended_tools": [
+    "Apache Tomcat 9.x/10.x",
+    "IntelliJ IDEA或Eclipse",
+    "MySQL 8.0",
+    "Maven构建工具",
+    "Postman API测试",
+    "Chrome开发者工具"
+  ],
+  "project_suggestions": [
+    {
+      "name": "学生信息管理系统",
+      "difficulty": 3,
+      "technologies_used": ["Servlet", "JSP", "JDBC", "MVC", "Session"]
+    },
+    {
+      "name": "简易博客系统",
+      "difficulty": 4,
+      "technologies_used": ["Servlet", "JSP", "JSTL", "JDBC", "Filter", "Listener", "MVC"]
+    },
+    {
+      "name": "在线商城系统",
+      "difficulty": 5,
+      "technologies_used": ["完整JavaWeb技术栈", "购物车(Session)", "权限控制(Filter)", "数据统计(Listener)"]
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: HTTP请求-响应流程</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { text-align: center; color: #667eea; margin-bottom: 20px; }
+        .analogy {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+        .viz-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 500px;
+            margin: 30px 0;
+            position: relative;
+        }
+        .actor {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            position: absolute;
+            transition: all 0.5s;
+        }
+        .browser { left: 50px; top: 200px; background: #4CAF50; }
+        .server { right: 50px; top: 200px; background: #FF9800; }
+        .message {
+            position: absolute;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 1s;
+        }
+        .request {
+            background: #2196F3;
+            color: white;
+            top: 150px;
+        }
+        .response {
+            background: #E91E63;
+            color: white;
+            top: 250px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+        .controls { text-align: center; margin: 20px 0; }
+        .info-box {
+            background: #fff9e6;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+        .step-indicator {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 HTTP请求-响应流程可视化</h1>
+        
+        <div class="analogy">
+            <h3>💡 生活类比：餐厅点餐</h3>
+            <p><strong>浏览器 = 顾客</strong> - 想要点什么（发送请求）</p>
+            <p><strong>服务器 = 厨房</strong> - 准备菜品（处理请求）</p>
+            <p><strong>HTTP = 服务员</strong> - 传递菜单和菜品（传输数据）</p>
+        </div>
+
+        <div class="controls">
+            <button onclick="startAnimation()">▶️ 开始演示</button>
+            <button onclick="resetAnimation()">🔄 重置</button>
+        </div>
+
+        <div class="step-indicator" id="stepIndicator">点击"开始演示"查看HTTP流程</div>
+
+        <div class="viz-area">
+            <div class="actor browser" id="browser">🖥️</div>
+            <div class="actor server" id="server">🖥️</div>
+            
+            <div class="message request" id="requestMsg">GET /index.html</div>
+            <div class="message response" id="responseMsg">200 OK + HTML</div>
+        </div>
+
+        <div class="info-box" id="infoBox">
+            <h4>📖 HTTP工作流程</h4>
+            <p>1. <strong>浏览器</strong>向<strong>服务器</strong>发送请求（Request）</p>
+            <p>2. <strong>服务器</strong>处理请求并返回响应（Response）</p>
+            <p>3. <strong>浏览器</strong>接收响应并显示页面</p>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const steps = [
+            "步骤1: 用户在浏览器输入网址",
+            "步骤2: 浏览器发送HTTP请求到服务器",
+            "步骤3: 服务器接收并处理请求",
+            "步骤4: 服务器返回HTTP响应",
+            "步骤5: 浏览器接收响应并渲染页面"
+        ];
+
+        function startAnimation() {
+            resetAnimation();
+            animateStep(0);
+        }
+
+        function animateStep(step) {
+            currentStep = step;
+            document.getElementById('stepIndicator').textContent = steps[step];
+            
+            switch(step) {
+                case 0:
+                    document.getElementById('browser').style.transform = 'scale(1.2)';
+                    setTimeout(() => animateStep(1), 1500);
+                    break;
+                case 1:
+                    const reqMsg = document.getElementById('requestMsg');
+                    reqMsg.style.opacity = '1';
+                    reqMsg.style.left = '200px';
+                    setTimeout(() => {
+                        reqMsg.style.left = '600px';
+                    }, 100);
+                    setTimeout(() => animateStep(2), 2000);
+                    break;
+                case 2:
+                    document.getElementById('server').style.transform = 'scale(1.2)';
+                    setTimeout(() => animateStep(3), 1500);
+                    break;
+                case 3:
+                    const resMsg = document.getElementById('responseMsg');
+                    resMsg.style.opacity = '1';
+                    resMsg.style.right = '200px';
+                    setTimeout(() => {
+                        resMsg.style.right = '600px';
+                    }, 100);
+                    setTimeout(() => animateStep(4), 2000);
+                    break;
+                case 4:
+                    document.getElementById('browser').style.transform = 'scale(1.2)';
+                    document.getElementById('infoBox').innerHTML = `
+                        <h4>✅ 完成！页面已加载</h4>
+                        <p><strong>请求方法:</strong> GET</p>
+                        <p><strong>状态码:</strong> 200 OK</p>
+                        <p><strong>内容类型:</strong> text/html</p>
+                    `;
+                    break;
+            }
+        }
+
+        function resetAnimation() {
+            currentStep = 0;
+            document.getElementById('browser').style.transform = 'scale(1)';
+            document.getElementById('server').style.transform = 'scale(1)';
+            document.getElementById('requestMsg').style.opacity = '0';
+            document.getElementById('requestMsg').style.left = '200px';
+            document.getElementById('responseMsg').style.opacity = '0';
+            document.getElementById('responseMsg').style.right = '200px';
+            document.getElementById('stepIndicator').textContent = '点击"开始演示"查看HTTP流程';
+            document.getElementById('infoBox').innerHTML = `
+                <h4>📖 HTTP工作流程</h4>
+                <p>1. <strong>浏览器</strong>向<strong>服务器</strong>发送请求（Request）</p>
+                <p>2. <strong>服务器</strong>处理请求并返回响应（Response）</p>
+                <p>3. <strong>浏览器</strong>接收响应并显示页面</p>
+            `;
+        }
+    </script>
+</body>
+</html>
