@@ -8,55 +8,34 @@
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
     <title>ELI5 编程基础可视化图解 - 索引</title>
+    <!-- Enhanced Styles -->
+    <link rel="stylesheet" href="./css/enhanced-styles.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        
-        h1 {
+        /* Page-specific overrides */
+        .page-header {
             text-align: center;
-            color: #667eea;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            padding: var(--space-2xl) 0;
+        }
+        
+        .page-title {
+            font-size: var(--text-4xl);
+            color: var(--primary);
+            margin-bottom: var(--space-sm);
         }
         
         .subtitle {
             text-align: center;
-            color: #666;
-            font-size: 1.2em;
-            margin-bottom: 40px;
+            color: var(--text-secondary);
+            font-size: var(--text-lg);
+            margin-bottom: var(--space-2xl);
         }
         
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
-        }
-        
-        .card {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 15px;
-            padding: 25px;
-            transition: all 0.3s ease;
+        .legacy-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            transition: all var(--transition);
             cursor: pointer;
             text-decoration: none;
             color: inherit;
@@ -65,155 +44,117 @@
             overflow: hidden;
         }
         
-        .card::before {
+        .legacy-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
             transform: scaleX(0);
-            transition: transform 0.3s ease;
+            transform-origin: left;
+            transition: transform var(--transition);
         }
         
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        .legacy-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
+            border-color: var(--primary-light);
+            background: var(--surface-hover);
         }
         
-        .card:hover::before {
+        .legacy-card:hover::before {
             transform: scaleX(1);
         }
         
         .card-number {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 40px;
-            font-weight: bold;
-            font-size: 1.2em;
-            margin-bottom: 15px;
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            font-size: var(--text-lg);
+            margin-bottom: var(--space-md);
         }
         
-        .card h3 {
-            color: #667eea;
-            font-size: 1.4em;
-            margin-bottom: 10px;
+        .legacy-card h3 {
+            color: var(--primary);
+            font-size: var(--text-xl);
+            margin-bottom: var(--space-sm);
         }
         
-        .card p {
-            color: #555;
-            line-height: 1.6;
-            margin-bottom: 15px;
+        .legacy-card p {
+            color: var(--text-secondary);
+            line-height: var(--leading-relaxed);
+            margin-bottom: var(--space-md);
         }
         
-        .card .analogy {
-            background: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-            font-size: 0.95em;
-            color: #666;
+        .legacy-card .analogy {
+            background: var(--background);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary);
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
         }
         
-        .card .features {
-            margin-top: 15px;
+        .legacy-card .features {
+            margin-top: var(--space-md);
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: var(--space-xs);
         }
         
-        .card .feature-tag {
+        .legacy-card .feature-tag {
             background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.85em;
-        }
-        
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 40px 0;
-            padding: 20px;
-            background: #f8f9ff;
-            border-radius: 15px;
-        }
-        
-        .stat-item {
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #667eea;
-            display: block;
-        }
-        
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 5px;
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #eee;
-            color: #666;
-        }
-        
-        @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-            
-            .stats {
-                flex-direction: column;
-                gap: 20px;
-            }
+            color: var(--primary);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
+    <!-- Skip to content link for accessibility -->
+    <a href="#main-content" class="skip-link">跳到主要内容</a>
+    
     <div class="container">
-        <h1>🎨 ELI5 编程基础可视化图解</h1>
-        <p class="subtitle">用生活类比和互动动画，让复杂概念变得简单易懂</p>
+        <header class="page-header">
+            <h1 class="page-title">🎨 ELI5 编程基础可视化图解</h1>
+            <p class="subtitle">用生活类比和互动动画，让复杂概念变得简单易懂</p>
+        </header>
         
-        <div class="stats">
-            <div class="stat-item">
-                <span class="stat-number">8</span>
+        <!-- Stats Section -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">9</span>
                 <div class="stat-label">核心概念</div>
             </div>
-            <div class="stat-item">
-                <span class="stat-number">16+</span>
+            <div class="stat-card">
+                <span class="stat-value">18+</span>
                 <div class="stat-label">代码示例</div>
             </div>
-            <div class="stat-item">
-                <span class="stat-number">50+</span>
+            <div class="stat-card">
+                <span class="stat-value">50+</span>
                 <div class="stat-label">互动元素</div>
             </div>
-            <div class="stat-item">
-                <span class="stat-number">∞</span>
+            <div class="stat-card">
+                <span class="stat-value">∞</span>
                 <div class="stat-label">学习乐趣</div>
             </div>
         </div>
         
-        <div class="grid">
-            <a href="01-linked-list.html" class="card">
+        <!-- Main Content Grid -->
+        <main id="main-content" class="grid grid-auto-fit">
+            <a href="01-linked-list.html" class="legacy-card">
                 <div class="card-number">1</div>
-                <h3>链表是如何工作的？</h3>
+                <h3>🚂 链表是如何工作的？</h3>
                 <p>理解动态数据结构的基础，掌握节点链接和内存分配的核心思想。</p>
                 <div class="analogy">
                     💡 <strong>生活类比：</strong>火车车厢 - 每节车厢包含货物和下一节车厢的位置
@@ -226,9 +167,9 @@
                 </div>
             </a>
             
-            <a href="02-recursion.html" class="card">
+            <a href="02-recursion.html" class="legacy-card">
                 <div class="card-number">2</div>
-                <h3>递归是如何工作的？</h3>
+                <h3>🪆 递归是如何工作的？</h3>
                 <p>揭开函数自我调用的神秘面纱，理解递归栈和基准条件的重要性。</p>
                 <div class="analogy">
                     💡 <strong>生活类比：</strong>俄罗斯套娃 - 打开一个娃娃发现里面还有更小的娃娃
@@ -241,9 +182,9 @@
                 </div>
             </a>
             
-            <a href="03-oop.html" class="card">
+            <a href="03-oop.html" class="legacy-card">
                 <div class="card-number">3</div>
-                <h3>面向对象编程是什么？</h3>
+                <h3>🏭 面向对象编程是什么？</h3>
                 <p>掌握封装、继承、多态和抽象四大支柱，构建可维护的代码结构。</p>
                 <div class="analogy">
                     💡 <strong>生活类比：</strong>汽车工厂 - 设计蓝图生产实际汽车对象
@@ -256,9 +197,9 @@
                 </div>
             </a>
             
-            <a href="04-memory-management.html" class="card">
+            <a href="04-memory-management.html" class="legacy-card">
                 <div class="card-number">4</div>
-                <h3>内存是如何管理的？</h3>
+                <h3>📚 内存是如何管理的？</h3>
                 <p>理解栈和堆的区别，掌握智能指针和垃圾回收的工作原理。</p>
                 <div class="analogy">
                     💡 <strong>生活类比：</strong>图书馆书架系统 - 快速存取区 vs 主书库
@@ -271,9 +212,9 @@
                 </div>
             </a>
             
-            <a href="05-exception-handling.html" class="card">
+            <a href="05-exception-handling.html" class="legacy-card">
                 <div class="card-number">5</div>
-                <h3>异常处理是如何工作的？</h3>
+                <h3>🚨 异常处理是如何工作的？</h3>
                 <p>学会优雅地处理错误情况，保证程序的健壮性和可维护性。</p>
                 <div class="analogy">
                     💡 <strong>生活类比：</strong>应急响应团队 - 火灾报警触发专业救援
@@ -286,9 +227,9 @@
                 </div>
             </a>
             
-            <a href="06-generics.html" class="card">
+            <a href="06-generics.html" class="legacy-card">
                 <div class="card-number">6</div>
-                <h3>泛型是什么？</h3>
+                <h3>📖 泛型是什么？</h3>
                 <p>理解类型参数化的力量，编写灵活且类型安全的通用代码。</p>
                 <div class="analogy">
                     💡 <strong>生活类比：</strong>万能食谱书 - 用占位符适应不同食材
@@ -301,9 +242,9 @@
                 </div>
             </a>
             
-            <a href="07-hash-table.html" class="card">
+            <a href="07-hash-table.html" class="legacy-card">
                 <div class="card-number">7</div>
-                <h3>哈希表是如何工作的？</h3>
+                <h3>🗄️ 哈希表是如何工作的？</h3>
                 <p>掌握O(1)查找的魔法，理解哈希函数和冲突解决策略。</p>
                 <div class="analogy">
                     💡 <strong>生活类比：</strong>图书馆卡片目录 - 书名映射到书架编号
@@ -316,9 +257,9 @@
                 </div>
             </a>
             
-            <a href="08-solid-principles.html" class="card">
+            <a href="08-solid-principles.html" class="legacy-card">
                 <div class="card-number">8</div>
-                <h3>SOLID设计原则是什么？</h3>
+                <h3>🏛️ SOLID设计原则是什么？</h3>
                 <p>学习构建高质量软件架构的五大黄金法则。</p>
                 <div class="analogy">
                     💡 <strong>生活类比：</strong>餐厅厨房组织 - 专业化分工提升效率
@@ -332,9 +273,9 @@
                 </div>
             </a>
             
-            <a href="09-sorting-algorithms.html" class="card">
+            <a href="09-sorting-algorithms.html" class="legacy-card">
                 <div class="card-number">9</div>
-                <h3>排序算法是如何工作的？</h3>
+                <h3>📊 排序算法是如何工作的？</h3>
                 <p>理解冒泡排序、快速排序、归并排序的动态过程和性能差异。</p>
                 <div class="analogy">
                     💡 <strong>生活类比：</strong>学生按身高排队 - 不同的排序策略
@@ -346,26 +287,49 @@
                     <span class="feature-tag">性能对比</span>
                 </div>
             </a>
-        </div>
+        </main>
         
         <!-- Progress Dashboard -->
         <div id="progress-dashboard-container"></div>
         
-        <div class="footer">
+        <!-- Progress Dashboard -->
+        <div id="progress-dashboard-container"></div>
+        
+        <footer class="footer">
             <p><strong>📚 配套教程：</strong>每个可视化图解都对应教程中的一个章节</p>
-            <p style="margin-top: 10px; font-size: 0.9em;">
+            <p style="margin-top: var(--space-sm); font-size: var(--text-sm);">
                 点击任意卡片开始探索 | 建议在现代浏览器中打开以获得最佳体验
             </p>
-            <p style="margin-top: 15px; color: #999; font-size: 0.85em;">
+            <p style="margin-top: var(--space-md); color: var(--text-tertiary); font-size: var(--text-xs);">
                 基于 C++ 和 Java 双语言示例 · 交互式学习 · 零基础友好
             </p>
-        </div>
+        </footer>
     </div>
     
-    <!-- Progress Tracker and Mobile Enhancements -->
+    <!-- UI Components and Enhanced Scripts -->
+    <script src="js/ui-components.js"></script>
     <script src="js/progress-tracker.js"></script>
     <script src="js/mobile-enhancements.js"></script>
     <script>
+        // Initialize navigation bar
+        document.addEventListener('DOMContentLoaded', () => {
+            const navbar = new NavigationBar({
+                brandText: 'ELI5 编程可视化',
+                brandLink: './index.html',
+                links: [
+                    { text: '首页', href: './index.html', active: true },
+                    { text: '链表', href: './01-linked-list.html' },
+                    { text: '递归', href: './02-recursion.html' },
+                    { text: 'OOP', href: './03-oop.html' }
+                ],
+                showThemeToggle: true
+            });
+            navbar.mount();
+            
+            // Show welcome toast
+            Toast.info('欢迎回来！', '继续你的编程学习之旅', 3000);
+        });
+        
         // Initialize progress dashboard
         if (typeof createProgressDashboard === 'function') {
             createProgressDashboard('progress-dashboard-container');
@@ -378,20 +342,24 @@
             tracker.updateStreak();
         }
         
-        // Add smooth scrolling and click tracking
-        document.querySelectorAll('.card').forEach(card => {
+        // Add enhanced click tracking with feedback
+        document.querySelectorAll('.legacy-card').forEach(card => {
             card.addEventListener('click', function(e) {
-                // Add a subtle animation on click
+                // Visual feedback
                 this.style.transform = 'scale(0.98)';
                 setTimeout(() => {
                     this.style.transform = '';
                 }, 150);
+                
+                // Track navigation
+                const title = this.querySelector('h3')?.textContent || 'Unknown';
+                console.log('[Navigation] Opening:', title);
             });
         });
         
-        // Add keyboard navigation
+        // Add keyboard navigation with arrow keys
         document.addEventListener('keydown', function(e) {
-            const cards = Array.from(document.querySelectorAll('.card'));
+            const cards = Array.from(document.querySelectorAll('.legacy-card'));
             const currentFocus = document.activeElement;
             const currentIndex = cards.indexOf(currentFocus);
             
@@ -399,10 +367,12 @@
                 e.preventDefault();
                 const nextIndex = (currentIndex + 1) % cards.length;
                 cards[nextIndex].focus();
+                cards[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                 e.preventDefault();
                 const prevIndex = (currentIndex - 1 + cards.length) % cards.length;
                 cards[prevIndex].focus();
+                cards[prevIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
     </script>
