@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: 设计模式是什么？</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        /* ---- Top navigation ---- */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: bold;
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            transition: all 0.3s;
+            background: white;
+        }
+        .nav-link:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .lang-toggle { display: flex; gap: 8px; }
+        .lang-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 2px solid #764ba2;
+            background: white;
+            color: #764ba2;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .lang-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        h1 { text-align: center; color: #667eea; font-size: 2.5em; margin-bottom: 10px; animation: fadeIn 0.8s ease-in; }
+        .subtitle { text-align: center; color: #666; font-size: 1.2em; margin-bottom: 30px; }
+
+        .analogy-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            animation: slideIn 0.6s ease-out;
+        }
+        .analogy-box h3 { color: #667eea; margin-bottom: 10px; }
+        .analogy-box p { color: #555; line-height: 1.8; }
+
+        /* ---- Category overview ---- */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .category-card {
+            padding: 24px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+            transition: transform 0.3s;
+        }
+        .category-card:hover { transform: translateY(-6px); }
+        .category-card .cat-icon { font-size: 2.4em; margin-bottom: 10px; }
+        .category-card h3 { font-size: 1.3em; margin-bottom: 8px; }
+        .category-card p { font-size: 0.92em; line-height: 1.6; opacity: 0.95; }
+        .cat-creational { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .cat-structural { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .cat-behavioral { background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); color: #5a4300; }
+
+        /* ---- Pattern sections ---- */
+        .pattern-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        .pattern-section:hover { border-color: #667eea; box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2); }
+        .pattern-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 15px; }
+        .pattern-title { color: #667eea; font-size: 1.7em; font-weight: bold; }
+        .pattern-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-width: 60px; height: 60px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8em;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            flex-shrink: 0;
+        }
+        .pattern-type {
+            display: inline-block;
+            font-size: 0.8em;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .type-creational { background: #ece9ff; color: #5a4bd1; }
+        .type-structural { background: #e3f7ee; color: #0f8a63; }
+        .type-behavioral { background: #fff3d6; color: #a9791c; }
+
+        .mini-analogy {
+            background: #fff5f5;
+            border: 2px solid #ff9f9f;
+            padding: 15px 18px;
+            border-radius: 10px;
+            margin: 15px 0;
+            line-height: 1.7;
+            color: #555;
+        }
+        .mini-analogy h4 { color: #e85959; margin-bottom: 6px; }
+
+        /* ---- Interactive demo ---- */
+        .demo-box {
+            background: white;
+            border: 2px dashed #b9c3f5;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 18px 0;
+        }
+        .demo-box h4 { color: #667eea; margin-bottom: 12px; }
+        .demo-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+        .demo-output {
+            background: #2d2d2d;
+            color: #a6e22e;
+            font-family: 'Courier New', monospace;
+            padding: 14px;
+            border-radius: 8px;
+            min-height: 48px;
+            white-space: pre-wrap;
+            font-size: 0.92em;
+        }
+        .actor {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f0f4ff;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin: 6px;
+            min-width: 90px;
+            text-align: center;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+        .actor .actor-icon { font-size: 1.6em; }
+        .actor.lit { background: #d8f5d8; border-color: #51cf66; transform: scale(1.08); box-shadow: 0 0 12px rgba(81,207,102,0.6); }
+        .actor.off { opacity: 0.4; border-style: dashed; }
+
+        /* ---- Buttons ---- */
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none;
+            padding: 10px 22px; border-radius: 25px;
+            font-size: 0.95em; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4); }
+        .btn.ghost { background: white; color: #667eea; border: 2px solid #667eea; box-shadow: none; }
+        .btn.ghost.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* ---- Code ---- */
+        .code-example { background: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 10px; font-family: 'Courier New', monospace; overflow-x: auto; margin: 16px 0; }
+        .code-block { white-space: pre; font-size: 0.9em; line-height: 1.5; }
+        .code-block .keyword { color: #ff79c6; }
+        .code-block .type { color: #8be9fd; }
+        .code-block .string { color: #f1fa8c; }
+        .code-block .comment { color: #6272a4; }
+
+        /* ---- Tables / grids ---- */
+        .comparison-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .comparison-table th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px; text-align: left; }
+        .comparison-table td { padding: 12px 14px; border-bottom: 1px solid #eee; }
+        .comparison-table tr:nth-child(even) { background: #f9f9f9; }
+
+        .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin: 20px 0; }
+        .benefit-card { background: white; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea; box-shadow: 0 2px 10px rgba(0,0,0,0.1); transition: transform 0.3s; }
+        .benefit-card:hover { transform: translateY(-5px); }
+        .benefit-icon { font-size: 2em; margin-bottom: 10px; }
+
+        .tradeoffs-list { list-style: none; padding: 0; }
+        .tradeoffs-list li { padding: 12px 16px; margin: 10px 0; background: white; border-radius: 8px; border-left: 4px solid #ffa94d; line-height: 1.6; }
+
+        .section-heading { text-align: center; color: #667eea; margin-bottom: 20px; }
+
+        /* ---- Quiz ---- */
+        .quiz-container { background: #fff9e6; border: 2px solid #ffd700; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .quiz-question { font-size: 1.15em; color: #555; margin-bottom: 15px; }
+        .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .quiz-option { padding: 15px; background: white; border: 2px solid #ddd; border-radius: 10px; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .quiz-option:hover { border-color: #667eea; background: #f0f4ff; }
+        .quiz-option.correct { border-color: #51cf66; background: #e6ffe6; }
+        .quiz-option.wrong { border-color: #ff6b6b; background: #ffe6e6; }
+
+        .explanation { background: #e6f3ff; border: 2px solid #667eea; border-radius: 10px; padding: 20px; margin: 24px 0; }
+        .explanation h4 { color: #667eea; margin-bottom: 10px; }
+        .explanation ul { margin-left: 20px; line-height: 1.9; color: #444; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+        @media (max-width: 640px) {
+            .container { padding: 22px; }
+            h1 { font-size: 1.8em; }
+            .quiz-options { grid-template-columns: 1fr; }
+            .pattern-title { font-size: 1.3em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-nav">
+            <a class="nav-link" href="./index.html">← 返回索引</a>
+            <div class="lang-toggle">
+                <span style="align-self:center;color:#666;font-size:0.9em;">代码语言：</span>
+                <button class="lang-btn active" id="lang-cpp" onclick="setLang('cpp')">C++</button>
+                <button class="lang-btn" id="lang-java" onclick="setLang('java')">Java</button>
+            </div>
+            <a class="nav-link" href="./09-sorting-algorithms.html">上一页：排序 →</a>
+        </div>
+
+        <h1>🧩 ELI5: 设计模式是什么？</h1>
+        <p class="subtitle">设计模式 = 前辈程序员总结好的"解题套路"，遇到类似问题直接套用</p>
+
+        <div class="analogy-box">
+            <h3>💡 生活类比：装修房子的"标准做法"</h3>
+            <p>盖房子时，"卫生间要做防水""承重墙不能拆""插座离地 30cm"——这些不是某个人发明的，而是无数房子盖出来后总结的<strong>标准套路</strong>。你照着做，就能避开前人踩过的坑。</p>
+            <p style="margin-top:10px;">编程里的<strong>设计模式</strong>就是这样：面对反复出现的设计难题（比如"怎么保证只有一个实例""怎么让一堆对象收到通知"），前人提炼出了可复用的解决方案。你不用每次从零想，直接套模式即可。1994 年"四人帮"(GoF) 整理了 23 种经典模式，分成三大类：</p>
+        </div>
+
+        <!-- Category overview -->
+        <div class="category-grid">
+            <div class="category-card cat-creational">
+                <div class="cat-icon">🏭</div>
+                <h3>创建型模式</h3>
+                <p>关注"怎么造对象"。把对象的创建和使用分开，让造对象更灵活。<br>例：单例、工厂、建造者</p>
+            </div>
+            <div class="category-card cat-structural">
+                <div class="cat-icon">🧱</div>
+                <h3>结构型模式</h3>
+                <p>关注"怎么拼装对象"。让类与类组合成更大结构时更省心。<br>例：适配器、装饰器、代理</p>
+            </div>
+            <div class="category-card cat-behavioral">
+                <div class="cat-icon">🎭</div>
+                <h3>行为型模式</h3>
+                <p>关注"对象之间怎么沟通"。让职责分配和消息传递更清晰。<br>例：观察者、策略、状态</p>
+            </div>
+        </div>
+
+        <p style="text-align:center;color:#888;margin-bottom:10px;">下面挑 6 个最常用、最好懂的模式，每个都能<strong>动手玩</strong> 👇</p>
+
+        <!-- ============ 1. Singleton ============ -->
+        <div class="pattern-section" id="singleton">
+            <div class="pattern-header">
+                <div class="pattern-title">1. 单例模式 (Singleton)</div>
+                <div class="pattern-badge">①</div>
+            </div>
+            <span class="pattern-type type-creational">创建型</span>
+
+            <div class="mini-analogy">
+                <h4>🌍 生活类比</h4>
+                一个公司只有一个 CEO，一个国家只有一个政府。不管你在哪个部门提到"CEO"，指的都是<strong>同一个人</strong>——绝不会每提一次就新招一个。单例就是保证"某个东西全局只有一个实例"。
+            </div>
+
+            <div class="demo-box">
+                <h4>🎮 动手玩：反复"获取实例"，看看是不是同一个</h4>
+                <div class="demo-controls">
+                    <button class="btn" onclick="singletonGet()">getInstance()</button>
+                    <button class="btn ghost" onclick="singletonReset()">重置</button>
+                </div>
+                <div class="demo-output" id="singleton-out">还没创建实例。点上面的按钮试试 →</div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-block lang-cpp"><span class="comment">// C++：懒汉式单例（C++11 起线程安全）</span>
+<span class="keyword">class</span> <span class="type">Config</span> {
+<span class="keyword">public</span>:
+    <span class="keyword">static</span> <span class="type">Config</span>&amp; instance() {
+        <span class="keyword">static</span> <span class="type">Config</span> inst;   <span class="comment">// 只在第一次调用时构造</span>
+        <span class="keyword">return</span> inst;
+    }
+    <span class="type">Config</span>(<span class="keyword">const</span> <span class="type">Config</span>&amp;) = <span class="keyword">delete</span>;   <span class="comment">// 禁止拷贝</span>
+    <span class="type">Config</span>&amp; <span class="keyword">operator</span>=(<span class="keyword">const</span> <span class="type">Config</span>&amp;) = <span class="keyword">delete</span>;
+<span class="keyword">private</span>:
+    <span class="type">Config</span>() {}                     <span class="comment">// 构造函数私有，外部无法 new</span>
+};</div>
+                <div class="code-block lang-java" style="display:none;"><span class="comment">// Java：枚举单例（最简洁、天然防反射和序列化破坏）</span>
+<span class="keyword">public enum</span> <span class="type">Config</span> {
+    INSTANCE;
+    <span class="keyword">public void</span> load() { <span class="comment">/* ... */</span> }
+}
+
+<span class="comment">// 使用： Config.INSTANCE.load();</span>
+
+<span class="comment">// 或者经典的双重检查锁写法：</span>
+<span class="keyword">public class</span> <span class="type">Config</span> {
+    <span class="keyword">private static volatile</span> <span class="type">Config</span> inst;
+    <span class="keyword">private</span> Config() {}
+    <span class="keyword">public static</span> <span class="type">Config</span> getInstance() {
+        <span class="keyword">if</span> (inst == <span class="keyword">null</span>) {
+            <span class="keyword">synchronized</span> (Config.<span class="keyword">class</span>) {
+                <span class="keyword">if</span> (inst == <span class="keyword">null</span>) inst = <span class="keyword">new</span> Config();
+            }
+        }
+        <span class="keyword">return</span> inst;
+    }
+}</div>
+            </div>
+        </div>
+
+        <!-- ============ 2. Factory ============ -->
+        <div class="pattern-section" id="factory">
+            <div class="pattern-header">
+                <div class="pattern-title">2. 工厂模式 (Factory)</div>
+                <div class="pattern-badge">🏭</div>
+            </div>
+            <span class="pattern-type type-creational">创建型</span>
+
+            <div class="mini-analogy">
+                <h4>🍔 生活类比</h4>
+                你去餐厅只说"来一份汉堡"，后厨就把汉堡做好端上来。你<strong>不需要知道</strong>它怎么煎肉、怎么烤面包。工厂模式就是那个"后厨"：你说要什么，它负责造好给你，把"怎么造"藏起来。
+            </div>
+
+            <div class="demo-box">
+                <h4>🎮 动手玩：向工厂下单，看它造出什么</h4>
+                <div class="demo-controls">
+                    <button class="btn" onclick="factoryCreate('coffee')">点 咖啡 ☕</button>
+                    <button class="btn" onclick="factoryCreate('tea')">点 茶 🍵</button>
+                    <button class="btn" onclick="factoryCreate('juice')">点 果汁 🧃</button>
+                </div>
+                <div class="demo-output" id="factory-out">工厂待命中。点一杯饮品 →</div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-block lang-cpp"><span class="comment">// C++：简单工厂，根据类型返回对应产品</span>
+<span class="keyword">class</span> <span class="type">Drink</span> { <span class="keyword">public</span>: <span class="keyword">virtual</span> ~<span class="type">Drink</span>() {} <span class="keyword">virtual</span> <span class="type">std::string</span> name() = 0; };
+<span class="keyword">class</span> <span class="type">Coffee</span> : <span class="keyword">public</span> <span class="type">Drink</span> { <span class="keyword">public</span>: <span class="type">std::string</span> name() <span class="keyword">override</span> { <span class="keyword">return</span> <span class="string">"咖啡"</span>; } };
+<span class="keyword">class</span> <span class="type">Tea</span>    : <span class="keyword">public</span> <span class="type">Drink</span> { <span class="keyword">public</span>: <span class="type">std::string</span> name() <span class="keyword">override</span> { <span class="keyword">return</span> <span class="string">"茶"</span>; } };
+
+<span class="keyword">class</span> <span class="type">DrinkFactory</span> {
+<span class="keyword">public</span>:
+    <span class="keyword">static</span> <span class="type">std::unique_ptr</span>&lt;<span class="type">Drink</span>&gt; create(<span class="keyword">const</span> <span class="type">std::string</span>&amp; type) {
+        <span class="keyword">if</span> (type == <span class="string">"coffee"</span>) <span class="keyword">return</span> <span class="type">std::make_unique</span>&lt;<span class="type">Coffee</span>&gt;();
+        <span class="keyword">if</span> (type == <span class="string">"tea"</span>)    <span class="keyword">return</span> <span class="type">std::make_unique</span>&lt;<span class="type">Tea</span>&gt;();
+        <span class="keyword">return nullptr</span>;
+    }
+};</div>
+                <div class="code-block lang-java" style="display:none;"><span class="comment">// Java：工厂方法，新增产品无需改调用方</span>
+<span class="keyword">interface</span> <span class="type">Drink</span> { String name(); }
+<span class="keyword">class</span> <span class="type">Coffee</span> <span class="keyword">implements</span> <span class="type">Drink</span> { <span class="keyword">public</span> String name() { <span class="keyword">return</span> <span class="string">"咖啡"</span>; } }
+<span class="keyword">class</span> <span class="type">Tea</span>    <span class="keyword">implements</span> <span class="type">Drink</span> { <span class="keyword">public</span> String name() { <span class="keyword">return</span> <span class="string">"茶"</span>; } }
+
+<span class="keyword">class</span> <span class="type">DrinkFactory</span> {
+    <span class="keyword">static</span> <span class="type">Drink</span> create(String type) {
+        <span class="keyword">switch</span> (type) {
+            <span class="keyword">case</span> <span class="string">"coffee"</span>: <span class="keyword">return new</span> Coffee();
+            <span class="keyword">case</span> <span class="string">"tea"</span>:    <span class="keyword">return new</span> Tea();
+            <span class="keyword">default</span>: <span class="keyword">throw new</span> IllegalArgumentException(type);
+        }
+    }
+}</div>
+            </div>
+        </div>
+
+        <!-- ============ 3. Observer ============ -->
+        <div class="pattern-section" id="observer">
+            <div class="pattern-header">
+                <div class="pattern-title">3. 观察者模式 (Observer)</div>
+                <div class="pattern-badge">📣</div>
+            </div>
+            <span class="pattern-type type-behavioral">行为型</span>
+
+            <div class="mini-analogy">
+                <h4>📱 生活类比</h4>
+                你关注了一个公众号（<strong>订阅</strong>）。博主一发文（<strong>发布通知</strong>），所有粉丝都自动收到推送——博主不需要一个个记住粉丝是谁、挨个打电话。这就是"一对多"的自动通知。
+            </div>
+
+            <div class="demo-box">
+                <h4>🎮 动手玩：订阅/退订粉丝，然后发布一条通知</h4>
+                <div class="demo-controls">
+                    <button class="btn" onclick="observerPublish()">📣 发布新文章</button>
+                    <button class="btn ghost" onclick="observerToggle('fan1')" id="btn-fan1">退订 粉丝A</button>
+                    <button class="btn ghost" onclick="observerToggle('fan2')" id="btn-fan2">退订 粉丝B</button>
+                    <button class="btn ghost" onclick="observerToggle('fan3')" id="btn-fan3">退订 粉丝C</button>
+                </div>
+                <div style="text-align:center;margin:10px 0;">
+                    <span class="actor lit" id="fan1"><span class="actor-icon">🙋</span>粉丝A</span>
+                    <span class="actor lit" id="fan2"><span class="actor-icon">🙋‍♀️</span>粉丝B</span>
+                    <span class="actor lit" id="fan3"><span class="actor-icon">🙋‍♂️</span>粉丝C</span>
+                </div>
+                <div class="demo-output" id="observer-out">3 位粉丝已订阅。点"发布新文章"看看谁会收到 →</div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-block lang-cpp"><span class="comment">// C++：主题维护观察者列表，状态变化时逐个通知</span>
+<span class="keyword">class</span> <span class="type">Observer</span> { <span class="keyword">public</span>: <span class="keyword">virtual void</span> update(<span class="keyword">const</span> <span class="type">std::string</span>&amp; msg) = 0; };
+
+<span class="keyword">class</span> <span class="type">Channel</span> {
+    <span class="type">std::vector</span>&lt;<span class="type">Observer</span>*&gt; subs;
+<span class="keyword">public</span>:
+    <span class="keyword">void</span> subscribe(<span class="type">Observer</span>* o)   { subs.push_back(o); }
+    <span class="keyword">void</span> unsubscribe(<span class="type">Observer</span>* o) { subs.erase(<span class="type">std::remove</span>(subs.begin(), subs.end(), o), subs.end()); }
+    <span class="keyword">void</span> publish(<span class="keyword">const</span> <span class="type">std::string</span>&amp; msg) {
+        <span class="keyword">for</span> (<span class="keyword">auto</span>* o : subs) o-&gt;update(msg);   <span class="comment">// 一对多广播</span>
+    }
+};</div>
+                <div class="code-block lang-java" style="display:none;"><span class="comment">// Java：接口 + 列表，发布时遍历通知</span>
+<span class="keyword">interface</span> <span class="type">Observer</span> { <span class="keyword">void</span> update(String msg); }
+
+<span class="keyword">class</span> <span class="type">Channel</span> {
+    <span class="keyword">private</span> List&lt;Observer&gt; subs = <span class="keyword">new</span> ArrayList&lt;&gt;();
+    <span class="keyword">public void</span> subscribe(Observer o)   { subs.add(o); }
+    <span class="keyword">public void</span> unsubscribe(Observer o) { subs.remove(o); }
+    <span class="keyword">public void</span> publish(String msg) {
+        <span class="keyword">for</span> (Observer o : subs) o.update(msg);  <span class="comment">// 一对多广播</span>
+    }
+}</div>
+            </div>
+        </div>
+
+        <!-- ============ 4. Strategy ============ -->
+        <div class="pattern-section" id="strategy">
+            <div class="pattern-header">
+                <div class="pattern-title">4. 策略模式 (Strategy)</div>
+                <div class="pattern-badge">🧭</div>
+            </div>
+            <span class="pattern-type type-behavioral">行为型</span>
+
+            <div class="mini-analogy">
+                <h4>🚗 生活类比</h4>
+                从家到公司，你可以<strong>走路、骑车、开车、坐地铁</strong>。目的地一样，但"怎么走"是可替换的策略，还能随时换。策略模式就是把"做同一件事的不同方法"各自封装起来，用哪个由你挑。
+            </div>
+
+            <div class="demo-box">
+                <h4>🎮 动手玩：选一种出行策略，看耗时和花费怎么变</h4>
+                <div class="demo-controls">
+                    <button class="btn ghost active" onclick="selectStrategy('walk', this)">🚶 走路</button>
+                    <button class="btn ghost" onclick="selectStrategy('bike', this)">🚲 骑车</button>
+                    <button class="btn ghost" onclick="selectStrategy('car', this)">🚗 开车</button>
+                    <button class="btn ghost" onclick="selectStrategy('subway', this)">🚇 地铁</button>
+                </div>
+                <div class="demo-output" id="strategy-out">当前策略：走路 → 60 分钟，花费 0 元，碳排放低</div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-block lang-cpp"><span class="comment">// C++：策略即接口，运行时可替换具体实现</span>
+<span class="keyword">class</span> <span class="type">RouteStrategy</span> { <span class="keyword">public</span>: <span class="keyword">virtual</span> ~<span class="type">RouteStrategy</span>() {} <span class="keyword">virtual void</span> go() = 0; };
+<span class="keyword">class</span> <span class="type">Walk</span> : <span class="keyword">public</span> <span class="type">RouteStrategy</span> { <span class="keyword">public</span>: <span class="keyword">void</span> go() <span class="keyword">override</span> { <span class="comment">/* 走路 */</span> } };
+<span class="keyword">class</span> <span class="type">Bike</span> : <span class="keyword">public</span> <span class="type">RouteStrategy</span> { <span class="keyword">public</span>: <span class="keyword">void</span> go() <span class="keyword">override</span> { <span class="comment">/* 骑车 */</span> } };
+
+<span class="keyword">class</span> <span class="type">Navigator</span> {
+    <span class="type">RouteStrategy</span>* strategy;
+<span class="keyword">public</span>:
+    <span class="keyword">void</span> setStrategy(<span class="type">RouteStrategy</span>* s) { strategy = s; }  <span class="comment">// 随时换策略</span>
+    <span class="keyword">void</span> start() { strategy-&gt;go(); }
+};</div>
+                <div class="code-block lang-java" style="display:none;"><span class="comment">// Java：用接口封装算法族，Context 持有可替换的策略</span>
+<span class="keyword">interface</span> <span class="type">RouteStrategy</span> { <span class="keyword">void</span> go(); }
+<span class="keyword">class</span> <span class="type">Walk</span> <span class="keyword">implements</span> <span class="type">RouteStrategy</span> { <span class="keyword">public void</span> go() { <span class="comment">/* 走路 */</span> } }
+<span class="keyword">class</span> <span class="type">Bike</span> <span class="keyword">implements</span> <span class="type">RouteStrategy</span> { <span class="keyword">public void</span> go() { <span class="comment">/* 骑车 */</span> } }
+
+<span class="keyword">class</span> <span class="type">Navigator</span> {
+    <span class="keyword">private</span> RouteStrategy strategy;
+    <span class="keyword">public void</span> setStrategy(RouteStrategy s) { <span class="keyword">this</span>.strategy = s; }
+    <span class="keyword">public void</span> start() { strategy.go(); }   <span class="comment">// 委托给当前策略</span>
+}
+
+<span class="comment">// Java 里也常用 Lambda 简化： Navigator n = ...; n.setStrategy(() -&gt; System.out.println("骑车"));</span></div>
+            </div>
+        </div>
+
+        <!-- ============ 5. Decorator ============ -->
+        <div class="pattern-section" id="decorator">
+            <div class="pattern-header">
+                <div class="pattern-title">5. 装饰器模式 (Decorator)</div>
+                <div class="pattern-badge">🎁</div>
+            </div>
+            <span class="pattern-type type-structural">结构型</span>
+
+            <div class="mini-analogy">
+                <h4>☕ 生活类比</h4>
+                一杯基础咖啡，你可以<strong>加奶 +2 元、加糖 +1 元、加一份浓缩 +5 元</strong>。每加一样，就在原来的基础上"包一层"，价格和功能层层叠加，但核心还是那杯咖啡。装饰器就是动态地给对象"加料"。
+            </div>
+
+            <div class="demo-box">
+                <h4>🎮 动手玩：勾选配料，看价格怎么一层层叠上去</h4>
+                <div class="demo-controls">
+                    <label><input type="checkbox" onchange="decoratorUpdate()" data-price="2" data-name="加奶"> 加奶 (+2元)</label>
+                    <label><input type="checkbox" onchange="decoratorUpdate()" data-price="1" data-name="加糖"> 加糖 (+1元)</label>
+                    <label><input type="checkbox" onchange="decoratorUpdate()" data-price="5" data-name="浓缩"> 浓缩 (+5元)</label>
+                    <label><input type="checkbox" onchange="decoratorUpdate()" data-price="3" data-name="奶盖"> 奶盖 (+3元)</label>
+                </div>
+                <div class="demo-output" id="decorator-out">基础咖啡 = 10 元</div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-block lang-cpp"><span class="comment">// C++：装饰器持有被装饰对象，接口一致，功能叠加</span>
+<span class="keyword">class</span> <span class="type">Coffee</span> { <span class="keyword">public</span>: <span class="keyword">virtual</span> ~<span class="type">Coffee</span>() {} <span class="keyword">virtual int</span> cost() = 0; };
+<span class="keyword">class</span> <span class="type">SimpleCoffee</span> : <span class="keyword">public</span> <span class="type">Coffee</span> { <span class="keyword">public</span>: <span class="keyword">int</span> cost() <span class="keyword">override</span> { <span class="keyword">return</span> 10; } };
+
+<span class="keyword">class</span> <span class="type">MilkDecorator</span> : <span class="keyword">public</span> <span class="type">Coffee</span> {
+    <span class="type">Coffee</span>* inner;
+<span class="keyword">public</span>:
+    <span class="type">MilkDecorator</span>(<span class="type">Coffee</span>* c) : inner(c) {}
+    <span class="keyword">int</span> cost() <span class="keyword">override</span> { <span class="keyword">return</span> inner-&gt;cost() + 2; }  <span class="comment">// 在原价格上加料</span>
+};</div>
+                <div class="code-block lang-java" style="display:none;"><span class="comment">// Java：装饰器实现同一接口，包装并增强原对象</span>
+<span class="keyword">interface</span> <span class="type">Coffee</span> { <span class="keyword">int</span> cost(); }
+<span class="keyword">class</span> <span class="type">SimpleCoffee</span> <span class="keyword">implements</span> <span class="type">Coffee</span> { <span class="keyword">public int</span> cost() { <span class="keyword">return</span> 10; } }
+
+<span class="keyword">class</span> <span class="type">MilkDecorator</span> <span class="keyword">implements</span> <span class="type">Coffee</span> {
+    <span class="keyword">private final</span> Coffee inner;
+    MilkDecorator(Coffee c) { <span class="keyword">this</span>.inner = c; }
+    <span class="keyword">public int</span> cost() { <span class="keyword">return</span> inner.cost() + 2; }  <span class="comment">// 层层叠加</span>
+}
+
+<span class="comment">// 使用： new MilkDecorator(new SimpleCoffee()).cost() == 12</span></div>
+            </div>
+        </div>
+
+        <!-- ============ 6. Adapter ============ -->
+        <div class="pattern-section" id="adapter">
+            <div class="pattern-header">
+                <div class="pattern-title">6. 适配器模式 (Adapter)</div>
+                <div class="pattern-badge">🔌</div>
+            </div>
+            <span class="pattern-type type-structural">结构型</span>
+
+            <div class="mini-analogy">
+                <h4>✈️ 生活类比</h4>
+                出国旅行，你的充电器插不进当地插座，于是用一个<strong>转换插头</strong>。它一头接当地插座、一头接你的充电器，让"本来不兼容的两方"能协作。适配器就是把一个接口"翻译"成另一个接口。
+            </div>
+
+            <div class="demo-box">
+                <h4>🎮 动手玩：不同国家的插座，靠适配器统一供电</h4>
+                <div class="demo-controls">
+                    <button class="btn ghost active" onclick="selectPlug('cn', this)">🇨🇳 国标插座</button>
+                    <button class="btn ghost" onclick="selectPlug('us', this)">🇺🇸 美标插座</button>
+                    <button class="btn ghost" onclick="selectPlug('uk', this)">🇬🇧 英标插座</button>
+                </div>
+                <div class="demo-output" id="adapter-out">插座：国标 → 适配器转换 → ✅ 充电器正常供电</div>
+            </div>
+
+            <div class="code-example">
+                <div class="code-block lang-cpp"><span class="comment">// C++：适配器把旧接口包装成目标接口</span>
+<span class="keyword">class</span> <span class="type">Socket</span> { <span class="keyword">public</span>: <span class="keyword">virtual</span> ~<span class="type">Socket</span>() {} <span class="keyword">virtual void</span> power() = 0; };
+<span class="keyword">class</span> <span class="type">Charger</span> { <span class="keyword">public</span>: <span class="keyword">void</span> charge() { <span class="comment">/* 需要 CN 接口 */</span> } };
+
+<span class="keyword">class</span> <span class="type">SocketAdapter</span> : <span class="keyword">public</span> <span class="type">Socket</span> {
+    <span class="type">Charger</span> charger;
+<span class="keyword">public</span>:
+    <span class="keyword">void</span> power() <span class="keyword">override</span> { charger.charge(); }  <span class="comment">// 把 power() 翻译成 charge()</span>
+};</div>
+                <div class="code-block lang-java" style="display:none;"><span class="comment">// Java：适配器实现目标接口，内部委托给被适配对象</span>
+<span class="keyword">interface</span> <span class="type">Socket</span> { <span class="keyword">void</span> power(); }
+<span class="keyword">class</span> <span class="type">Charger</span> { <span class="keyword">void</span> charge() { <span class="comment">/* 需要 CN 接口 */</span> } }
+
+<span class="keyword">class</span> <span class="type">SocketAdapter</span> <span class="keyword">implements</span> <span class="type">Socket</span> {
+    <span class="keyword">private final</span> Charger charger = <span class="keyword">new</span> Charger();
+    <span class="keyword">public void</span> power() { charger.charge(); }  <span class="comment">// 接口翻译</span>
+}</div>
+            </div>
+        </div>
+
+        <!-- ============ Comparison table ============ -->
+        <div class="pattern-section">
+            <h2 class="section-heading">📊 六大模式速查表</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr><th>模式</th><th>类别</th><th>一句话</th><th>生活类比</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>单例 Singleton</td><td>创建型</td><td>全局只有一个实例</td><td>唯一的 CEO</td></tr>
+                    <tr><td>工厂 Factory</td><td>创建型</td><td>你说要什么，它负责造</td><td>餐厅后厨</td></tr>
+                    <tr><td>观察者 Observer</td><td>行为型</td><td>一对多自动通知</td><td>公众号推送</td></tr>
+                    <tr><td>策略 Strategy</td><td>行为型</td><td>同一件事的多种做法可替换</td><td>出行方式</td></tr>
+                    <tr><td>装饰器 Decorator</td><td>结构型</td><td>动态给对象加功能</td><td>咖啡加料</td></tr>
+                    <tr><td>适配器 Adapter</td><td>结构型</td><td>把不兼容的接口翻译成兼容</td><td>转换插头</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ============ Benefits ============ -->
+        <div class="pattern-section">
+            <h2 class="section-heading">🎯 用设计模式有什么好处</h2>
+            <div class="benefits-grid">
+                <div class="benefit-card"><div class="benefit-icon">🗣️</div><h4>团队共同语言</h4><p>说"这里用观察者模式"，同事立刻懂你的设计意图，不用长篇解释。</p></div>
+                <div class="benefit-card"><div class="benefit-icon">♻️</div><h4>复用成熟方案</h4><p>站在前人肩膀上，避免重复造轮子、重复踩坑。</p></div>
+                <div class="benefit-card"><div class="benefit-icon">🔧</div><h4>易扩展易维护</h4><p>多数模式都在降低耦合，加新功能时改动范围小。</p></div>
+                <div class="benefit-card"><div class="benefit-icon">📐</div><h4>代码更规整</h4><p>结构清晰、职责分明，新人也更容易读懂。</p></div>
+            </div>
+        </div>
+
+        <!-- ============ Tradeoffs ============ -->
+        <div class="pattern-section">
+            <h2 class="section-heading">⚖️ 权衡与提醒</h2>
+            <ul class="tradeoffs-list">
+                <li>🚫 <strong>别为了用而用</strong>：模式是工具不是目的。简单问题硬套模式，反而让代码更复杂（过度设计）。</li>
+                <li>📈 <strong>有学习成本</strong>：团队不熟悉时，滥用模式会降低可读性。先理解意图，再决定是否引入。</li>
+                <li>🔍 <strong>识别时机</strong>：当你发现"同样的代码结构反复出现""加一个功能要改一堆地方"时，往往就是该上模式的信号。</li>
+                <li>🧩 <strong>模式会组合</strong>：真实项目里常多个模式一起用（如工厂 + 单例 + 观察者），不必拘泥于单一模式。</li>
+            </ul>
+        </div>
+
+        <!-- ============ Quiz ============ -->
+        <div class="pattern-section">
+            <h2 class="section-heading">🎮 互动测验</h2>
+            <div class="quiz-container">
+                <div class="quiz-question" id="quiz-question">加载中…</div>
+                <div class="quiz-options" id="quiz-options"></div>
+                <div style="text-align:center;margin-top:20px;">
+                    <button class="btn" onclick="nextQuestion()">下一题 ➡️</button>
+                </div>
+                <div style="text-align:center;margin-top:10px;">
+                    <span id="score-display">得分: 0/5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ Summary ============ -->
+        <div class="explanation">
+            <h4>🎯 核心要点总结</h4>
+            <ul>
+                <li><strong>设计模式</strong>是前人总结的可复用"解题套路"，不是具体代码库。</li>
+                <li><strong>三大类</strong>：创建型（怎么造）、结构型（怎么拼）、行为型（怎么沟通）。</li>
+                <li><strong>单例</strong>保证唯一实例，<strong>工厂</strong>封装创建，<strong>观察者</strong>做一对多通知。</li>
+                <li><strong>策略</strong>让算法可替换，<strong>装饰器</strong>动态加功能，<strong>适配器</strong>做接口翻译。</li>
+                <li><strong>记住：</strong>模式服务于问题，先有痛点再选模式，切忌过度设计！</li>
+            </ul>
+            <p style="margin-top:15px;">➡️ 想继续深入？下一步可以学 <strong>并发编程</strong> 与 <strong>网络原理</strong> 可视化（本系列待补充的进阶主题）。</p>
+        </div>
+    </div>
+
+    <script>
+        /* ---------- Language toggle ---------- */
+        function setLang(lang) {
+            document.querySelectorAll('.lang-cpp').forEach(el => el.style.display = (lang === 'cpp' ? 'block' : 'none'));
+            document.querySelectorAll('.lang-java').forEach(el => el.style.display = (lang === 'java' ? 'block' : 'none'));
+            document.getElementById('lang-cpp').classList.toggle('active', lang === 'cpp');
+            document.getElementById('lang-java').classList.toggle('active', lang === 'java');
+        }
+
+        /* ---------- 1. Singleton demo ---------- */
+        let singletonInstance = null;
+        let singletonCount = 0;
+        function singletonGet() {
+            singletonCount++;
+            const out = document.getElementById('singleton-out');
+            if (singletonInstance === null) {
+                singletonInstance = 'Config@' + Math.random().toString(16).slice(2, 6);
+                out.textContent = `第 ${singletonCount} 次 getInstance() → 首次创建，新实例 = ${singletonInstance}`;
+            } else {
+                out.textContent = `第 ${singletonCount} 次 getInstance() → 复用已有实例 = ${singletonInstance}（没有新建！）`;
+            }
+        }
+        function singletonReset() {
+            singletonInstance = null;
+            singletonCount = 0;
+            document.getElementById('singleton-out').textContent = '已重置。再点 getInstance() 会重新创建一次。';
+        }
+
+        /* ---------- 2. Factory demo ---------- */
+        const factoryMenu = {
+            coffee: { icon: '☕', name: '咖啡', desc: '研磨→萃取→装杯' },
+            tea:    { icon: '🍵', name: '茶',   desc: '取茶叶→冲泡→滤渣' },
+            juice:  { icon: '🧃', name: '果汁', desc: '选水果→榨汁→灌装' }
+        };
+        function factoryCreate(type) {
+            const p = factoryMenu[type];
+            document.getElementById('factory-out').textContent =
+                `工厂收到订单："${p.name}"\n→ 内部流程：${p.desc}\n→ 产出：${p.icon} 一杯${p.name}（你无需关心怎么做的）`;
+        }
+
+        /* ---------- 3. Observer demo ---------- */
+        const observerState = { fan1: true, fan2: true, fan3: true };
+        let observerPosts = 0;
+        function observerToggle(fan) {
+            observerState[fan] = !observerState[fan];
+            const el = document.getElementById(fan);
+            const btn = document.getElementById('btn-' + fan);
+            el.classList.toggle('lit', observerState[fan]);
+            el.classList.toggle('off', !observerState[fan]);
+            btn.textContent = (observerState[fan] ? '退订 ' : '订阅 ') + el.textContent.trim();
+        }
+        function observerPublish() {
+            observerPosts++;
+            const names = { fan1: '粉丝A', fan2: '粉丝B', fan3: '粉丝C' };
+            const notified = Object.keys(observerState).filter(k => observerState[k]).map(k => names[k]);
+            const out = document.getElementById('observer-out');
+            if (notified.length === 0) {
+                out.textContent = `📣 发布了第 ${observerPosts} 篇文章 → 没有任何订阅者，无人收到推送 😢`;
+            } else {
+                out.textContent = `📣 发布了第 ${observerPosts} 篇文章 → 推送给 ${notified.length} 位订阅者：${notified.join('、')} ✅`;
+            }
+        }
+
+        /* ---------- 4. Strategy demo ---------- */
+        const strategies = {
+            walk:   { label: '走路', time: 60, cost: 0,  eco: '碳排放低' },
+            bike:   { label: '骑车', time: 25, cost: 2,  eco: '碳排放低' },
+            car:    { label: '开车', time: 15, cost: 12, eco: '碳排放高' },
+            subway: { label: '地铁', time: 20, cost: 4,  eco: '碳排放中' }
+        };
+        function selectStrategy(key, btn) {
+            document.querySelectorAll('#strategy .demo-controls .btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const s = strategies[key];
+            document.getElementById('strategy-out').textContent =
+                `当前策略：${s.label} → ${s.time} 分钟，花费 ${s.cost} 元，${s.eco}`;
+        }
+
+        /* ---------- 5. Decorator demo ---------- */
+        function decoratorUpdate() {
+            const base = 10;
+            let total = base;
+            const parts = ['基础咖啡(10)'];
+            document.querySelectorAll('#decorator input[type=checkbox]').forEach(cb => {
+                if (cb.checked) {
+                    total += parseInt(cb.dataset.price, 10);
+                    parts.push(`${cb.dataset.name}(+${cb.dataset.price})`);
+                }
+            });
+            document.getElementById('decorator-out').textContent =
+                `${parts.join(' + ')} = ${total} 元\n（每勾一样就"包一层"装饰器，核心仍是那杯咖啡）`;
+        }
+
+        /* ---------- 6. Adapter demo ---------- */
+        const plugs = {
+            cn: { name: '国标', need: false },
+            us: { name: '美标', need: true },
+            uk: { name: '英标', need: true }
+        };
+        function selectPlug(key, btn) {
+            document.querySelectorAll('#adapter .demo-controls .btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const p = plugs[key];
+            const out = document.getElementById('adapter-out');
+            if (p.need) {
+                out.textContent = `插座：${p.name}（与充电器不兼容）→ 🔌 适配器转换 → ✅ 充电器正常供电`;
+            } else {
+                out.textContent = `插座：${p.name}（本就兼容）→ 直接插上 → ✅ 充电器正常供电`;
+            }
+        }
+
+        /* ---------- Quiz ---------- */
+        const questions = [
+            {
+                question: "要保证一个配置管理器在全程序中只有一个实例，应该用哪个模式？",
+                options: ["A. 工厂模式", "B. 单例模式", "C. 观察者模式", "D. 适配器模式"],
+                correct: 1
+            },
+            {
+                question: "公众号发文后，所有粉丝自动收到推送。这是哪个模式的典型场景？",
+                options: ["A. 观察者模式", "B. 策略模式", "C. 装饰器模式", "D. 单例模式"],
+                correct: 0
+            },
+            {
+                question: "给一杯咖啡动态地加奶、加糖、加浓缩，价格层层叠加。最适合用哪个模式？",
+                options: ["A. 适配器模式", "B. 工厂模式", "C. 装饰器模式", "D. 观察者模式"],
+                correct: 2
+            },
+            {
+                question: "充电器插不进国外插座，用一个转换插头解决。这对应哪个模式？",
+                options: ["A. 策略模式", "B. 单例模式", "C. 装饰器模式", "D. 适配器模式"],
+                correct: 3
+            },
+            {
+                question: "同一段导航功能，想在走路/骑车/开车间随时切换算法，应该用哪个模式？",
+                options: ["A. 策略模式", "B. 工厂模式", "C. 单例模式", "D. 适配器模式"],
+                correct: 0
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+
+        function checkAnswer(selectedIndex) {
+            if (answered) return;
+            const options = document.querySelectorAll('.quiz-option');
+            const correctIndex = questions[currentQuestion].correct;
+            options.forEach((option, index) => {
+                option.style.pointerEvents = 'none';
+                if (index === correctIndex) option.classList.add('correct');
+                else if (index === selectedIndex) option.classList.add('wrong');
+            });
+            if (selectedIndex === correctIndex) score++;
+            answered = true;
+            updateScore();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            answered = false;
+            if (currentQuestion >= questions.length) { currentQuestion = 0; score = 0; }
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('quiz-question').textContent =
+                `问题 ${currentQuestion + 1}/${questions.length}: ${q.question}`;
+            const optionsDiv = document.getElementById('quiz-options');
+            optionsDiv.innerHTML = '';
+            q.options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'quiz-option';
+                div.textContent = option;
+                div.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(div);
+            });
+            updateScore();
+        }
+
+        function updateScore() {
+            document.getElementById('score-display').textContent = `得分: ${score}/${questions.length}`;
+        }
+
+        /* ---------- Init ---------- */
+        document.addEventListener('DOMContentLoaded', () => {
+            setLang('cpp');
+            loadQuestion();
+        });
+    </script>
+</body>
+</html>

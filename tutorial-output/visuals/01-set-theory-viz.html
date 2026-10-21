@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: 集合论 - 韦恩图可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { text-align: center; color: #667eea; margin-bottom: 20px; }
+        .analogy {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+        .viz-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            margin: 30px 0;
+        }
+        svg { max-width: 100%; height: auto; }
+        .circle { fill-opacity: 0.3; stroke-width: 3; transition: all 0.3s; cursor: pointer; }
+        .circle:hover { fill-opacity: 0.5; }
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+        .info-box {
+            background: #fff9e6;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 集合论可视化</h1>
+        
+        <div class="analogy">
+            <h3>💡 生活类比</h3>
+            <p><strong>想象你有两个朋友圈：</strong></p>
+            <ul style="margin-left: 20px; line-height: 2;">
+                <li><strong>A圈</strong> = 喜欢打篮球的朋友</li>
+                <li><strong>B圈</strong> = 喜欢看电影的朋友</li>
+                <li><strong>交集 A∩B</strong> = 既爱打球又爱看电影的朋友</li>
+                <li><strong>并集 A∪B</strong> = 所有朋友（至少喜欢其中一样）</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <button onclick="showUnion()">显示并集 (A∪B)</button>
+            <button onclick="showIntersection()">显示交集 (A∩B)</button>
+            <button onclick="showDifference()">显示差集 (A-B)</button>
+            <button onclick="resetView()">重置视图</button>
+        </div>
+
+        <div class="viz-area">
+            <svg width="500" height="400" viewBox="0 0 500 400">
+                <!-- Circle A -->
+                <circle id="circleA" cx="180" cy="200" r="120" 
+                        fill="#667eea" stroke="#667eea" class="circle"/>
+                <!-- Circle B -->
+                <circle id="circleB" cx="320" cy="200" r="120" 
+                        fill="#764ba2" stroke="#764ba2" class="circle"/>
+                
+                <!-- Labels -->
+                <text x="140" y="200" text-anchor="middle" fill="white" 
+                      font-size="24" font-weight="bold">A</text>
+                <text x="360" y="200" text-anchor="middle" fill="white" 
+                      font-size="24" font-weight="bold">B</text>
+                
+                <!-- Intersection label -->
+                <text x="250" y="200" text-anchor="middle" fill="white" 
+                      font-size="16" font-weight="bold" id="interLabel">A∩B</text>
+            </svg>
+        </div>
+
+        <div class="info-box" id="infoBox">
+            <h4>📖 概念说明</h4>
+            <p><strong>并集 (A∪B)</strong>: 属于A或B的所有元素</p>
+            <p><strong>交集 (A∩B)</strong>: 同时属于A和B的元素</p>
+            <p><strong>差集 (A-B)</strong>: 属于A但不属于B的元素</p>
+        </div>
+    </div>
+
+    <script>
+        const circleA = document.getElementById('circleA');
+        const circleB = document.getElementById('circleB');
+        const infoBox = document.getElementById('infoBox');
+
+        function showUnion() {
+            circleA.style.fillOpacity = '0.4';
+            circleB.style.fillOpacity = '0.4';
+            infoBox.innerHTML = `
+                <h4>🎨 并集 (A∪B) - 紫色区域</h4>
+                <p>就像你把两个朋友圈合并，得到所有朋友的名单。</p>
+                <p><strong>数学表示:</strong> A∪B = {x | x∈A 或 x∈B}</p>
+            `;
+        }
+
+        function showIntersection() {
+            circleA.style.fillOpacity = '0.2';
+            circleB.style.fillOpacity = '0.2';
+            infoBox.innerHTML = `
+                <h4>🎯 交集 (A∩B) - 中间重叠区域</h4>
+                <p>这些是既在A圈又在B圈的朋友，比如既爱打球又爱看电影的人。</p>
+                <p><strong>数学表示:</strong> A∩B = {x | x∈A 且 x∈B}</p>
+            `;
+        }
+
+        function showDifference() {
+            circleA.style.fillOpacity = '0.5';
+            circleB.style.fillOpacity = '0.1';
+            infoBox.innerHTML = `
+                <h4>➖ 差集 (A-B) - A中不与B重叠的部分</h4>
+                <p>只喜欢打篮球但不喜欢看电影的朋友。</p>
+                <p><strong>数学表示:</strong> A-B = {x | x∈A 且 x∉B}</p>
+            `;
+        }
+
+        function resetView() {
+            circleA.style.fillOpacity = '0.3';
+            circleB.style.fillOpacity = '0.3';
+            infoBox.innerHTML = `
+                <h4>📖 概念说明</h4>
+                <p><strong>并集 (A∪B)</strong>: 属于A或B的所有元素</p>
+                <p><strong>交集 (A∩B)</strong>: 同时属于A和B的元素</p>
+                <p><strong>差集 (A-B)</strong>: 属于A但不属于B的元素</p>
+            `;
+        }
+    </script>
+</body>
+</html>

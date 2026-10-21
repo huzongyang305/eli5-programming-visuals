@@ -1,0 +1,91 @@
+{
+  "title": "离散数学教程",
+  "description": "涵盖离散数学核心概念的完整学习路径",
+  "version": "1.0.0",
+  "total_concepts": 10,
+  "concepts": [
+    {
+      "concept_name": "集合论基础",
+      "description": "研究集合的基本概念、运算和性质，包括集合的定义、子集、并集、交集、补集、笛卡尔积等核心内容",
+      "prerequisites": [],
+      "difficulty": 1,
+      "estimated_time": 180
+    },
+    {
+      "concept_name": "命题逻辑",
+      "description": "研究命题的真值、逻辑连接词（与、或、非、蕴含、等价）、真值表、逻辑等价和推理规则",
+      "prerequisites": ["集合论基础"],
+      "difficulty": 2,
+      "estimated_time": 240
+    },
+    {
+      "concept_name": "谓词逻辑",
+      "description": "扩展命题逻辑，引入量词（全称量词、存在量词）、谓词、变量和函数符号，研究一阶逻辑的语法和语义",
+      "prerequisites": ["命题逻辑"],
+      "difficulty": 3,
+      "estimated_time": 300
+    },
+    {
+      "concept_name": "证明方法",
+      "description": "学习各种数学证明技巧，包括直接证明、反证法、归纳法、构造性证明和鸽巢原理",
+      "prerequisites": ["命题逻辑", "谓词逻辑"],
+      "difficulty": 3,
+      "estimated_time": 270
+    },
+    {
+      "concept_name": "关系理论",
+      "description": "研究二元关系的性质（自反、对称、传递）、等价关系、偏序关系、闭包运算以及关系的矩阵表示",
+      "prerequisites": ["集合论基础", "命题逻辑"],
+      "difficulty": 2,
+      "estimated_time": 240
+    },
+    {
+      "concept_name": "函数",
+      "description": "研究函数的定义、类型（单射、满射、双射）、复合函数、逆函数、递归函数及其在计算机科学中的应用",
+      "prerequisites": ["集合论基础", "关系理论"],
+      "difficulty": 2,
+      "estimated_time": 210
+    },
+    {
+      "concept_name": "组合数学",
+      "description": "研究计数原理、排列组合、二项式定理、容斥原理、生成函数和递推关系",
+      "prerequisites": ["集合论基础", "证明方法"],
+      "difficulty": 3,
+      "estimated_time": 360
+    },
+    {
+      "concept_name": "布尔代数",
+      "description": "研究布尔变量、布尔运算、布尔表达式化简、卡诺图、逻辑电路设计及其在数字系统中的应用",
+      "prerequisites": ["集合论基础", "命题逻辑"],
+      "difficulty": 2,
+      "estimated_time": 240
+    },
+    {
+      "concept_name": "图论基础",
+      "description": "研究图的基本概念（顶点、边、路径、回路）、图的表示、连通性、欧拉图和哈密顿图、平面图",
+      "prerequisites": ["集合论基础", "关系理论"],
+      "difficulty": 3,
+      "estimated_time": 360
+    },
+    {
+      "concept_name": "树结构",
+      "description": "研究树的定义和性质、二叉树、遍历算法、最小生成树、哈夫曼编码和决策树",
+      "prerequisites": ["图论基础"],
+      "difficulty": 3,
+      "estimated_time": 300
+    }
+  ],
+  "learning_path": [
+    "集合论基础",
+    "命题逻辑",
+    "谓词逻辑",
+    "证明方法",
+    "关系理论",
+    "函数",
+    "组合数学",
+    "布尔代数",
+    "图论基础",
+    "树结构"
+  ],
+  "total_estimated_time": 2700
+}
