@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: Servlet生命周期</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { text-align: center; color: #667eea; margin-bottom: 20px; }
+        .analogy {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+        .lifecycle-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 400px;
+            margin: 30px 0;
+            position: relative;
+        }
+        .phase {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            opacity: 0.3;
+            transition: all 0.5s;
+            cursor: pointer;
+            position: relative;
+        }
+        .phase.active { opacity: 1; transform: scale(1.1); }
+        .phase.init { background: #4CAF50; color: white; }
+        .phase.service { background: #2196F3; color: white; }
+        .phase.destroy { background: #F44336; color: white; }
+        .phase-icon { font-size: 48px; margin-bottom: 10px; }
+        .arrow {
+            position: absolute;
+            font-size: 48px;
+            color: #667eea;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .arrow.show { opacity: 1; }
+        .controls { text-align: center; margin: 20px 0; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+        .info-box {
+            background: #fff9e6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Servlet生命周期可视化</h1>
+        
+        <div class="analogy">
+            <h3>💡 生活类比：餐厅服务员的一天</h3>
+            <p><strong>init() = 上班打卡</strong> - 准备制服、了解今日菜单（只执行一次）</p>
+            <p><strong>service() = 接待顾客</strong> - 点餐、上菜、结账（反复执行）</p>
+            <p><strong>destroy() = 下班关门</strong> - 清理桌面、关闭电源（只执行一次）</p>
+        </div>
+
+        <div class="controls">
+            <button onclick="startLifecycle()">▶️ 开始演示</button>
+            <button onclick="resetLifecycle()">🔄 重置</button>
+        </div>
+
+        <div class="lifecycle-container">
+            <div class="phase init" id="phaseInit">
+                <div class="phase-icon">🎂</div>
+                <div>init()</div>
+                <div style="font-size: 12px;">初始化</div>
+            </div>
+            
+            <div class="arrow" id="arrow1" style="left: 200px;">➡️</div>
+            
+            <div class="phase service" id="phaseService">
+                <div class="phase-icon">🍽️</div>
+                <div>service()</div>
+                <div style="font-size: 12px;">服务请求</div>
+            </div>
+            
+            <div class="arrow" id="arrow2" style="left: 520px;">➡️</div>
+            
+            <div class="phase destroy" id="phaseDestroy">
+                <div class="phase-icon">🔚</div>
+                <div>destroy()</div>
+                <div style="font-size: 12px;">销毁</div>
+            </div>
+        </div>
+
+        <div class="info-box" id="infoBox">
+            <h4>📖 Servlet生命周期三阶段</h4>
+            <p><strong>1. 初始化 (init)</strong>: 容器创建Servlet实例，调用init()方法，加载配置</p>
+            <p><strong>2. 服务 (service)</strong>: 处理客户端请求，可被多次调用</p>
+            <p><strong>3. 销毁 (destroy)</strong>: 容器关闭时调用，释放资源</p>
+        </div>
+
+        <div class="code-example" id="codeExample" style="display: none;">
+            <pre><code>public class MyServlet extends HttpServlet {
+    
+    // 1. 初始化（只执行一次）
+    @Override
+    public void init() throws ServletException {
+        System.out.println("Servlet 初始化...");
+        // 加载配置文件、建立数据库连接等
+    }
+    
+    // 2. 服务请求（可多次执行）
+    @Override
+    protected void doGet(HttpServletRequest req, 
+                        HttpServletResponse resp) 
+                        throws ServletException, IOException {
+        resp.setContentType("text/html;charset=UTF-8");
+        resp.getWriter().println("&lt;h1&gt;Hello World!&lt;/h1&gt;");
+    }
+    
+    // 3. 销毁（只执行一次）
+    @Override
+    public void destroy() {
+        System.out.println("Servlet 销毁...");
+        // 关闭数据库连接、释放资源等
+    }
+}</code></pre>
+        </div>
+    </div>
+
+    <script>
+        function startLifecycle() {
+            resetLifecycle();
+            animatePhase('init');
+        }
+
+        function animatePhase(phase) {
+            const infoBox = document.getElementById('infoBox');
+            const codeExample = document.getElementById('codeExample');
+            
+            switch(phase) {
+                case 'init':
+                    document.getElementById('phaseInit').classList.add('active');
+                    infoBox.innerHTML = `
+                        <h4>🎂 阶段1: init() - 初始化</h4>
+                        <p><strong>何时执行:</strong> 第一次请求或服务器启动时</p>
+                        <p><strong>执行次数:</strong> 只执行一次</p>
+                        <p><strong>做什么:</strong> 加载配置、初始化资源、建立连接</p>
+                    `;
+                    codeExample.style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('arrow1').classList.add('show');
+                        setTimeout(() => animatePhase('service'), 500);
+                    }, 2000);
+                    break;
+                    
+                case 'service':
+                    document.getElementById('phaseService').classList.add('active');
+                    infoBox.innerHTML = `
+                        <h4>🍽️ 阶段2: service() - 服务请求</h4>
+                        <p><strong>何时执行:</strong> 每次收到客户端请求时</p>
+                        <p><strong>执行次数:</strong> 可被多次调用（多线程）</p>
+                        <p><strong>做什么:</strong> 处理业务逻辑、返回响应</p>
+                        <p style="color: #FF9800;"><strong>⚠️ 注意:</strong> 此阶段会反复执行！</p>
+                    `;
+                    setTimeout(() => {
+                        // 模拟多次服务请求
+                        let count = 0;
+                        const interval = setInterval(() => {
+                            count++;
+                            document.getElementById('phaseService').style.transform = 
+                                `scale(${1.1 + count * 0.05})`;
+                            if (count >= 3) {
+                                clearInterval(interval);
+                                document.getElementById('phaseService').style.transform = 'scale(1.1)';
+                                document.getElementById('arrow2').classList.add('show');
+                                setTimeout(() => animatePhase('destroy'), 500);
+                            }
+                        }, 500);
+                    }, 2000);
+                    break;
+                    
+                case 'destroy':
+                    document.getElementById('phaseDestroy').classList.add('active');
+                    infoBox.innerHTML = `
+                        <h4>🔚 阶段3: destroy() - 销毁</h4>
+                        <p><strong>何时执行:</strong> 服务器关闭或Servlet被移除时</p>
+                        <p><strong>执行次数:</strong> 只执行一次</p>
+                        <p><strong>做什么:</strong> 关闭连接、释放资源、清理数据</p>
+                        <p style="color: #4CAF50;"><strong>✅ 完成!</strong> Servlet生命周期结束</p>
+                    `;
+                    break;
+            }
+        }
+
+        function resetLifecycle() {
+            document.getElementById('phaseInit').classList.remove('active');
+            document.getElementById('phaseService').classList.remove('active');
+            document.getElementById('phaseDestroy').classList.remove('active');
+            document.getElementById('arrow1').classList.remove('show');
+            document.getElementById('arrow2').classList.remove('show');
+            document.getElementById('codeExample').style.display = 'none';
+            document.getElementById('phaseService').style.transform = 'scale(1)';
+            document.getElementById('infoBox').innerHTML = `
+                <h4>📖 Servlet生命周期三阶段</h4>
+                <p><strong>1. 初始化 (init)</strong>: 容器创建Servlet实例，调用init()方法，加载配置</p>
+                <p><strong>2. 服务 (service)</strong>: 处理客户端请求，可被多次调用</p>
+                <p><strong>3. 销毁 (destroy)</strong>: 容器关闭时调用，释放资源</p>
+            `;
+        }
+    </script>
+</body>
+</html>

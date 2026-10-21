@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: 过滤器链(Filter Chain)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { text-align: center; color: #667eea; margin-bottom: 20px; }
+        .analogy {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+        .airport-viz {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        .checkpoint {
+            width: 120px;
+            height: 160px;
+            border: 3px solid;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .checkpoint:hover { transform: scale(1.05); }
+        .checkpoint.encoding { border-color: #4CAF50; background: #E8F5E9; }
+        .checkpoint.auth { border-color: #FF9800; background: #FFF3E0; }
+        .checkpoint.logging { border-color: #2196F3; background: #E3F2FD; }
+        .checkpoint.active { box-shadow: 0 0 20px rgba(0,0,0,0.3); transform: scale(1.1); }
+        .checkpoint-icon { font-size: 48px; margin-bottom: 10px; }
+        .checkpoint-name { font-weight: bold; font-size: 14px; }
+        .passenger {
+            font-size: 48px;
+            position: absolute;
+            transition: all 0.5s;
+            left: -100px;
+        }
+        .arrow {
+            font-size: 36px;
+            color: #667eea;
+        }
+        .server {
+            width: 150px;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .controls { text-align: center; margin: 20px 0; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+        .info-box {
+            background: #fff9e6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .step-indicator {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ 过滤器链(Filter Chain)可视化</h1>
+        
+        <div class="analogy">
+            <h3>💡 生活类比：机场安检流程</h3>
+            <p><strong>乘客 = HTTP请求</strong> - 想要到达目的地（Servlet）</p>
+            <p><strong>安检口 = Filter</strong> - 每个检查一道关卡（编码、登录、日志）</p>
+            <p><strong>登机口 = Servlet</strong> - 最终处理请求的地方</p>
+            <p><strong>所有安检口串联 = FilterChain</strong> - 必须依次通过</p>
+        </div>
+
+        <div class="controls">
+            <button onclick="startFilterChain()">▶️ 开始演示</button>
+            <button onclick="resetFilterChain()">🔄 重置</button>
+        </div>
+
+        <div class="step-indicator" id="stepIndicator">点击"开始演示"查看过滤器链工作流程</div>
+
+        <div class="airport-viz">
+            <div class="passenger" id="passenger">🧑</div>
+            
+            <div class="checkpoint encoding" id="filter1" onclick="showFilterInfo('encoding')">
+                <div class="checkpoint-icon">🔤</div>
+                <div class="checkpoint-name">编码过滤器</div>
+                <div style="font-size: 12px;">设置UTF-8</div>
+            </div>
+            
+            <div class="arrow">➡️</div>
+            
+            <div class="checkpoint auth" id="filter2" onclick="showFilterInfo('auth')">
+                <div class="checkpoint-icon">🔐</div>
+                <div class="checkpoint-name">登录验证</div>
+                <div style="font-size: 12px;">检查Session</div>
+            </div>
+            
+            <div class="arrow">➡️</div>
+            
+            <div class="checkpoint logging" id="filter3" onclick="showFilterInfo('logging')">
+                <div class="checkpoint-icon">📝</div>
+                <div class="checkpoint-name">日志记录</div>
+                <div style="font-size: 12px;">记录访问</div>
+            </div>
+            
+            <div class="arrow">➡️</div>
+            
+            <div class="server">
+                <div style="font-size: 48px;">🎯</div>
+                <div>Servlet</div>
+                <div style="font-size: 12px;">业务逻辑</div>
+            </div>
+        </div>
+
+        <div class="info-box" id="infoBox">
+            <h4>📖 过滤器链工作原理</h4>
+            <p>1. 请求到达时，按配置顺序依次经过每个Filter</p>
+            <p>2. 每个Filter可以修改请求或响应</p>
+            <p>3. Filter调用chain.doFilter()将请求传递给下一个Filter</p>
+            <p>4. 所有Filter通过后，请求才到达Servlet</p>
+            <p>5. 响应返回时，按相反顺序再次经过Filter链</p>
+        </div>
+
+        <div class="code-example" id="codeExample" style="display: none;">
+            <pre><code>// 编码过滤器示例
+@WebFilter("/*")
+public class EncodingFilter implements Filter {
+    public void doFilter(ServletRequest request, 
+                        ServletResponse response, 
+                        FilterChain chain) 
+                        throws IOException, ServletException {
+        // 1. 请求前处理
+        request.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
+        
+        // 2. 传递给下一个过滤器或Servlet
+        chain.doFilter(request, response);
+        
+        // 3. 响应后处理（可选）
+        System.out.println("请求处理完成");
+    }
+}</code></pre>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const filters = ['filter1', 'filter2', 'filter3'];
+        const filterNames = ['编码过滤器', '登录验证过滤器', '日志记录过滤器'];
+        const filterDescs = [
+            '设置请求和响应的字符编码为UTF-8，防止中文乱码',
+            '检查用户是否已登录，未登录则重定向到登录页',
+            '记录访问时间、IP地址、请求URL等信息'
+        ];
+
+        function startFilterChain() {
+            resetFilterChain();
+            animateStep(0);
+        }
+
+        function animateStep(step) {
+            currentStep = step;
+            const passenger = document.getElementById('passenger');
+            const indicator = document.getElementById('stepIndicator');
+            
+            if (step < filters.length) {
+                // 移动到下一个过滤器
+                const filterId = filters[step];
+                const filterEl = document.getElementById(filterId);
+                const rect = filterEl.getBoundingClientRect();
+                const containerRect = document.querySelector('.airport-viz').getBoundingClientRect();
+                
+                passenger.style.left = (rect.left - containerRect.left + 40) + 'px';
+                passenger.style.top = '60px';
+                
+                filterEl.classList.add('active');
+                indicator.textContent = `第${step + 1}关: ${filterNames[step]}`;
+                
+                document.getElementById('infoBox').innerHTML = `
+                    <h4>🛡️ ${filterNames[step]}</h4>
+                    <p><strong>功能:</strong> ${filterDescs[step]}</p>
+                    <p><strong>操作:</strong> 检查通过，调用 chain.doFilter() 传递到下一关</p>
+                `;
+                
+                setTimeout(() => {
+                    filterEl.classList.remove('active');
+                    animateStep(step + 1);
+                }, 2000);
+            } else {
+                // 到达Servlet
+                passenger.style.left = 'calc(100% - 150px)';
+                indicator.textContent = '✅ 所有过滤器通过！到达Servlet处理业务逻辑';
+                document.getElementById('infoBox').innerHTML = `
+                    <h4>🎯 到达Servlet</h4>
+                    <p>请求已通过所有过滤器检查，现在可以安全地处理业务逻辑了！</p>
+                    <p><strong>优势:</strong> 通用功能（编码、验证、日志）被抽取到Filter，Servlet只需关注核心业务</p>
+                `;
+                document.getElementById('codeExample').style.display = 'block';
+            }
+        }
+
+        function showFilterInfo(type) {
+            const infoBox = document.getElementById('infoBox');
+            const examples = {
+                encoding: {
+                    title: '🔤 编码过滤器',
+                    desc: '统一设置请求和响应的字符编码，避免中文乱码问题',
+                    config: '@WebFilter("/*") - 拦截所有请求'
+                },
+                auth: {
+                    title: '🔐 登录验证过滤器',
+                    desc: '检查Session中是否有用户信息，未登录则重定向到login.jsp',
+                    config: '@WebFilter("/admin/*") - 只拦截后台管理路径'
+                },
+                logging: {
+                    title: '📝 日志记录过滤器',
+                    desc: '记录每次请求的时间、IP、URL，用于审计和分析',
+                    config: '@WebFilter("/*") - 记录所有访问'
+                }
+            };
+            const ex = examples[type];
+            infoBox.innerHTML = `
+                <h4>${ex.title}</h4>
+                <p><strong>功能:</strong> ${ex.desc}</p>
+                <p><strong>配置:</strong> ${ex.config}</p>
+            `;
+        }
+
+        function resetFilterChain() {
+            currentStep = 0;
+            document.getElementById('passenger').style.left = '-100px';
+            document.getElementById('passenger').style.top = '60px';
+            filters.forEach(id => {
+                document.getElementById(id).classList.remove('active');
+            });
+            document.getElementById('stepIndicator').textContent = '点击"开始演示"查看过滤器链工作流程';
+            document.getElementById('codeExample').style.display = 'none';
+            document.getElementById('infoBox').innerHTML = `
+                <h4>📖 过滤器链工作原理</h4>
+                <p>1. 请求到达时，按配置顺序依次经过每个Filter</p>
+                <p>2. 每个Filter可以修改请求或响应</p>
+                <p>3. Filter调用chain.doFilter()将请求传递给下一个Filter</p>
+                <p>4. 所有Filter通过后，请求才到达Servlet</p>
+                <p>5. 响应返回时，按相反顺序再次经过Filter链</p>
+            `;
+        }
+    </script>
+</body>
+</html>

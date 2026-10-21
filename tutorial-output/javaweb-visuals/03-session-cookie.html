@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: Session vs Cookie</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { text-align: center; color: #667eea; margin-bottom: 20px; }
+        .analogy {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .card {
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .card:hover { transform: translateY(-10px); }
+        .session-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .cookie-card { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .card-icon { font-size: 72px; margin-bottom: 15px; }
+        .card h2 { margin-bottom: 15px; }
+        .card ul { list-style: none; text-align: left; line-height: 2; }
+        .card li::before { content: "✓ "; margin-right: 5px; }
+        .viz-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            margin: 30px 0;
+            position: relative;
+        }
+        .browser-box {
+            width: 200px;
+            height: 150px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .server-box {
+            width: 200px;
+            height: 150px;
+            border: 3px solid #FF9800;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-left: 200px;
+        }
+        .cookie-item {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 24px;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .session-id {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+        .arrow-line {
+            position: absolute;
+            height: 3px;
+            background: #667eea;
+            top: 75px;
+            left: 200px;
+            width: 200px;
+        }
+        .arrow-label {
+            position: absolute;
+            top: 50px;
+            left: 270px;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .controls { text-align: center; margin: 20px 0; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+        .info-box {
+            background: #fff9e6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th { background: #667eea; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍪 Session vs Cookie 对比</h1>
+        
+        <div class="analogy">
+            <h3>💡 生活类比：健身房会员</h3>
+            <p><strong>Cookie = 会员卡</strong> - 你随身携带，每次出示证明身份（存在浏览器）</p>
+            <p><strong>Session = 前台记录</strong> - 健身房保存你的详细信息（存在服务器）</p>
+            <p><strong>Session ID = 卡号</strong> - Cookie里只存卡号，详细信息在服务器查</p>
+        </div>
+
+        <div class="comparison">
+            <div class="card session-card" onclick="showDetails('session')">
+                <div class="card-icon">🖥️</div>
+                <h2>Session</h2>
+                <ul>
+                    <li>存储在<strong>服务器</strong></li>
+                    <li>更安全</li>
+                    <li>可存储大量数据</li>
+                    <li>会话关闭后失效</li>
+                    <li>占用服务器内存</li>
+                </ul>
+            </div>
+            
+            <div class="card cookie-card" onclick="showDetails('cookie')">
+                <div class="card-icon">🍪</div>
+                <h2>Cookie</h2>
+                <ul>
+                    <li>存储在<strong>浏览器</strong></li>
+                    <li>相对不安全</li>
+                    <li>容量有限(4KB)</li>
+                    <li>可设置过期时间</li>
+                    <li>不占用服务器资源</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="showFlow()">🔄 查看工作流程</button>
+            <button onclick="showComparison()">📊 详细对比表</button>
+        </div>
+
+        <div class="viz-area" id="vizArea">
+            <div class="browser-box">
+                <div style="font-size: 48px;">🖥️</div>
+                <div>浏览器</div>
+                <div class="cookie-item">🍪 JSESSIONID=abc123</div>
+            </div>
+            <div class="arrow-line"></div>
+            <div class="arrow-label">HTTP请求/响应</div>
+            <div class="server-box">
+                <div style="font-size: 48px;">🖥️</div>
+                <div>服务器</div>
+                <div class="session-id">Session: abc123</div>
+                <div style="font-size: 12px; margin-top: 10px;">
+                    用户信息:<br>
+                    - 用户名: 张三<br>
+                    - 购物车: 3件商品
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box" id="infoBox">
+            <h4>🔑 核心原理</h4>
+            <p>1. 用户首次访问时，服务器创建Session并生成唯一ID</p>
+            <p>2. 服务器将Session ID通过Cookie发送给浏览器</p>
+            <p>3. 浏览器后续请求自动携带该Cookie</p>
+            <p>4. 服务器根据Session ID查找对应的Session数据</p>
+        </div>
+
+        <div id="comparisonTable" style="display: none;">
+            <table>
+                <tr>
+                    <th>特性</th>
+                    <th>Session</th>
+                    <th>Cookie</th>
+                </tr>
+                <tr>
+                    <td>存储位置</td>
+                    <td>服务器</td>
+                    <td>浏览器</td>
+                </tr>
+                <tr>
+                    <td>安全性</td>
+                    <td>⭐⭐⭐⭐⭐ 高</td>
+                    <td>⭐⭐ 低（可被篡改）</td>
+                </tr>
+                <tr>
+                    <td>存储容量</td>
+                    <td>几乎无限制</td>
+                    <td>最大4KB</td>
+                </tr>
+                <tr>
+                    <td>生命周期</td>
+                    <td>会话结束即失效</td>
+                    <td>可设置长期有效</td>
+                </tr>
+                <tr>
+                    <td>服务器压力</td>
+                    <td>占用内存</td>
+                    <td>不占用</td>
+                </tr>
+                <tr>
+                    <td>典型用途</td>
+                    <td>登录状态、购物车</td>
+                    <td>记住我、用户偏好</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function showDetails(type) {
+            const infoBox = document.getElementById('infoBox');
+            if (type === 'session') {
+                infoBox.innerHTML = `
+                    <h4>🖥️ Session详解</h4>
+                    <p><strong>创建方式:</strong> HttpSession session = request.getSession();</p>
+                    <p><strong>存储数据:</strong> session.setAttribute("user", userObject);</p>
+                    <p><strong>获取数据:</strong> User user = (User) session.getAttribute("user");</p>
+                    <p><strong>销毁:</strong> session.invalidate();</p>
+                    <p style="color: #4CAF50;"><strong>✅ 适用场景:</strong> 敏感数据（密码、个人信息）、临时数据（购物车）</p>
+                `;
+            } else {
+                infoBox.innerHTML = `
+                    <h4>🍪 Cookie详解</h4>
+                    <p><strong>创建方式:</strong> Cookie cookie = new Cookie("name", "value");</p>
+                    <p><strong>设置有效期:</strong> cookie.setMaxAge(7 * 24 * 60 * 60); // 7天</p>
+                    <p><strong>发送到浏览器:</strong> response.addCookie(cookie);</p>
+                    <p><strong>读取Cookie:</strong> Cookie[] cookies = request.getCookies();</p>
+                    <p style="color: #FF9800;"><strong>⚠️ 注意:</strong> 不要存储敏感信息！用户可以查看和修改Cookie</p>
+                `;
+            }
+        }
+
+        function showFlow() {
+            document.getElementById('comparisonTable').style.display = 'none';
+            document.getElementById('vizArea').style.display = 'flex';
+            document.getElementById('infoBox').innerHTML = `
+                <h4>🔑 Session+Cookie联合工作流程</h4>
+                <p><strong>第1步:</strong> 用户登录，服务器创建Session，存入用户信息</p>
+                <p><strong>第2步:</strong> 服务器生成Session ID（如abc123），通过Cookie发给浏览器</p>
+                <p><strong>第3步:</strong> 浏览器保存Cookie，后续请求自动携带</p>
+                <p><strong>第4步:</strong> 服务器收到请求，从Cookie读取Session ID，查找Session数据</p>
+                <p style="color: #667eea;"><strong>💡 关键:</strong> Cookie只存ID，真实数据在服务器！这样既方便又安全</p>
+            `;
+        }
+
+        function showComparison() {
+            document.getElementById('vizArea').style.display = 'none';
+            document.getElementById('comparisonTable').style.display = 'block';
+            document.getElementById('infoBox').innerHTML = `
+                <h4>📊 如何选择？</h4>
+                <p><strong>用Session:</strong> 敏感数据、临时数据、大数据量</p>
+                <p><strong>用Cookie:</strong> 用户偏好设置、"记住我"功能、非敏感信息</p>
+                <p><strong>最佳实践:</strong> 两者结合使用 - Cookie存Session ID，Session存真实数据</p>
+            `;
+        }
+    </script>
+</body>
+</html>

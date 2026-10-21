@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVC 架构模式 - ELI5 可视化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .analogy-box {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .analogy-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .restaurant-scene {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .role-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .role-card.model {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .role-card.view {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .role-card.controller {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .role-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .role-name {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .role-analogy {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            opacity: 0.95;
+        }
+
+        .role-responsibility {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .flow-diagram {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .flow-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .flow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            margin: 40px 0;
+        }
+
+        .flow-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2em;
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s ease;
+        }
+
+        .step-circle:hover {
+            transform: scale(1.1);
+        }
+
+        .step-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .step-desc {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .arrow {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            z-index: 1;
+        }
+
+        .arrow::before,
+        .arrow::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+
+        .arrow::before {
+            left: 0;
+            border-right: 15px solid #667eea;
+        }
+
+        .arrow::after {
+            right: 0;
+            border-left: 15px solid #764ba2;
+        }
+
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .code-keyword {
+            color: #ff79c6;
+        }
+
+        .code-class {
+            color: #8be9fd;
+        }
+
+        .code-method {
+            color: #50fa7b;
+        }
+
+        .code-string {
+            color: #f1fa8c;
+        }
+
+        .code-comment {
+            color: #6272a4;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-left: 5px solid #fdcb6e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .highlight-title {
+            font-size: 1.3em;
+            color: #2d3436;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .restaurant-scene {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-steps {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .arrow {
+                display: none;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .interactive-demo {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .demo-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .demo-button:hover {
+            transform: scale(1.05);
+        }
+
+        .demo-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-height: 100px;
+            display: none;
+        }
+
+        .demo-result.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏪 MVC 架构模式</h1>
+        <p class="subtitle">Model-View-Controller：像餐厅一样分工协作</p>
+
+        <div class="analogy-box">
+            <div class="analogy-title">
+                <span>💡</span>
+                <span>生活类比：餐厅的分工协作</span>
+            </div>
+            <p style="font-size: 1.1em; line-height: 1.8;">
+                想象一家餐厅，有三个关键角色：<br><br>
+                🧑‍🍳 <strong>厨房（Model）</strong>：负责准备食材、烹饪菜肴，管理所有数据（菜品信息、库存）<br>
+                📋 <strong>菜单/展示台（View）</strong>：负责展示菜品图片、价格，让顾客看到最终呈现<br>
+                🤵 <strong>服务员（Controller）</strong>：接收顾客点单，告诉厨房做什么，再把菜端给顾客<br><br>
+                <strong>核心思想</strong>：各司其职，互不干扰！厨房不直接面对顾客，服务员不做菜，菜单不烹饪。
+            </p>
+        </div>
+
+        <div class="restaurant-scene">
+            <div class="role-card model" onclick="showDetail('model')">
+                <span class="role-icon">🧑‍🍳</span>
+                <div class="role-name">Model（模型）</div>
+                <div class="role-analogy">厨房 / 数据库</div>
+                <div class="role-responsibility">
+                    • 管理数据和业务逻辑<br>
+                    • 连接数据库（JDBC）<br>
+                    • 处理数据增删改查<br>
+                    • 不包含任何显示代码
+                </div>
+            </div>
+
+            <div class="role-card view" onclick="showDetail('view')">
+                <span class="role-icon">📋</span>
+                <div class="role-name">View（视图）</div>
+                <div class="role-analogy">菜单 / JSP页面</div>
+                <div class="role-responsibility">
+                    • 负责用户界面展示<br>
+                    • JSP / HTML 页面<br>
+                    • 显示 Model 提供的数据<br>
+                    • 不包含业务逻辑
+                </div>
+            </div>
+
+            <div class="role-card controller" onclick="showDetail('controller')">
+                <span class="role-icon">🤵</span>
+                <div class="role-name">Controller（控制器）</div>
+                <div class="role-analogy">服务员 / Servlet</div>
+                <div class="role-responsibility">
+                    • 接收用户请求<br>
+                    • 调用 Model 处理数据<br>
+                    • 选择 View 展示结果<br>
+                    • 协调 Model 和 View
+                </div>
+            </div>
+        </div>
+
+        <div class="flow-diagram">
+            <h2 class="flow-title">🔄 MVC 工作流程：顾客点餐的完整过程</h2>
+            
+            <div class="flow-steps">
+                <div class="arrow"></div>
+                
+                <div class="flow-step">
+                    <div class="step-circle">1️⃣</div>
+                    <div class="step-label">用户请求</div>
+                    <div class="step-desc">顾客看菜单点菜</div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-circle">2️⃣</div>
+                    <div class="step-label">Controller</div>
+                    <div class="step-desc">服务员记录订单</div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-circle">3️⃣</div>
+                    <div class="step-label">Model</div>
+                    <div class="step-desc">厨房准备菜品</div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-circle">4️⃣</div>
+                    <div class="step-label">View</div>
+                    <div class="step-desc">上菜展示</div>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <div class="highlight-title">✨ 详细流程说明</div>
+                <ol style="line-height: 2; padding-left: 20px;">
+                    <li><strong>用户点击"查看商品"</strong> → 浏览器发送 HTTP 请求到 Servlet（Controller）</li>
+                    <li><strong>Servlet 接收请求</strong> → 解析参数，决定需要哪些数据</li>
+                    <li><strong>Servlet 调用 Model</strong> → 通过 JDBC 从数据库查询商品信息</li>
+                    <li><strong>Model 返回数据</strong> → 把商品列表封装成 Java 对象返回</li>
+                    <li><strong>Servlet 选择 View</strong> → 将数据放入 request，转发到 JSP 页面</li>
+                    <li><strong>JSP 渲染页面</strong> → 遍历数据，生成 HTML 展示给用户</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="code-example">
+<div class="code-comment">// ========== Controller: OrderServlet.java（服务员）==========</div>
+<span class="code-keyword">public class</span> <span class="code-class">OrderServlet</span> <span class="code-keyword">extends</span> <span class="code-class">HttpServlet</span> {
+    <span class="code-keyword">protected void</span> <span class="code-method">doGet</span>(HttpServletRequest request, HttpServletResponse response) {
+        <span class="code-comment">// 1. 接收顾客订单</span>
+        String dishName = request.getParameter(<span class="code-string">"dish"</span>);
+        
+        <span class="code-comment">// 2. 叫厨房做菜（调用 Model）</span>
+        <span class="code-class">DishService</span> dishService = <span class="code-keyword">new</span> <span class="code-class">DishService</span>();
+        <span class="code-class">Dish</span> dish = dishService.findByName(dishName);
+        
+        <span class="code-comment">// 3. 把菜交给传菜员（存入 request）</span>
+        request.setAttribute(<span class="code-string">"dish"</span>, dish);
+        
+        <span class="code-comment">// 4. 端到餐桌（转发到 JSP 视图）</span>
+        request.getRequestDispatcher(<span class="code-string">"/dish-detail.jsp"</span>).forward(request, response);
+    }
+}
+
+<div class="code-comment">// ========== Model: DishService.java（厨房）==========</div>
+<span class="code-keyword">public class</span> <span class="code-class">DishService</span> {
+    <span class="code-keyword">public</span> <span class="code-class">Dish</span> <span class="code-method">findByName</span>(String name) {
+        <span class="code-comment">// 连接数据库查询菜品信息</span>
+        <span class="code-class">Connection</span> conn = <span class="code-class">DBUtil</span>.getConnection();
+        <span class="code-class">PreparedStatement</span> ps = conn.prepareStatement(
+            <span class="code-string">"SELECT * FROM dishes WHERE name = ?"</span>
+        );
+        ps.setString(1, name);
+        <span class="code-class">ResultSet</span> rs = ps.executeQuery();
+        
+        <span class="code-keyword">if</span> (rs.next()) {
+            <span class="code-class">Dish</span> dish = <span class="code-keyword">new</span> <span class="code-class">Dish</span>();
+            dish.setName(rs.getString(<span class="code-string">"name"</span>));
+            dish.setPrice(rs.getDouble(<span class="code-string">"price"</span>));
+            <span class="code-keyword">return</span> dish;
+        }
+        <span class="code-keyword">return null</span>;
+    }
+}
+
+<div class="code-comment">&lt;!-- ========== View: dish-detail.jsp（菜单展示）========== --&gt;</div>
+&lt;<span class="code-keyword">html</span>&gt;
+&lt;<span class="code-keyword">body</span>&gt;
+    &lt;<span class="code-keyword">h1</span>&gt;${dish.name}&lt;/<span class="code-keyword">h1</span>&gt;
+    &lt;<span class="code-keyword">p</span>&gt;价格：¥${dish.price}&lt;/<span class="code-keyword">p</span>&gt;
+    &lt;<span class="code-keyword">img</span> src=<span class="code-string">"${dish.imageUrl}"</span> /&gt;
+&lt;/<span class="code-keyword">body</span>&gt;
+&lt;/<span class="code-keyword">html</span>&gt;
+        </div>
+
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>对比维度</th>
+                    <th>❌ 没有 MVC（混乱）</th>
+                    <th>✅ 使用 MVC（清晰）</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>代码结构</strong></td>
+                    <td>SQL、HTML、Java 混在一起</td>
+                    <td>各司其职，层次分明</td>
+                </tr>
+                <tr>
+                    <td><strong>修改界面</strong></td>
+                    <td>要改多处代码，容易出错</td>
+                    <td>只改 JSP，不影响其他层</td>
+                </tr>
+                <tr>
+                    <td><strong>团队协作</strong></td>
+                    <td>前端后端互相干扰</td>
+                    <td>前端做 View，后端做 Model/Controller</td>
+                </tr>
+                <tr>
+                    <td><strong>代码复用</strong></td>
+                    <td>相同逻辑到处复制</td>
+                    <td>Model 可被多个 Controller 调用</td>
+                </tr>
+                <tr>
+                    <td><strong>测试难度</strong></td>
+                    <td>难以单独测试业务逻辑</td>
+                    <td>可单独测试 Model，无需启动服务器</td>
+                </tr>
+                <tr>
+                    <td><strong>维护成本</strong></td>
+                    <td>牵一发而动全身</td>
+                    <td>修改一层，不影响其他层</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="interactive-demo">
+            <h2 style="color: #667eea; margin-bottom: 20px;">🎮 互动演示：模拟 MVC 流程</h2>
+            <p style="margin-bottom: 20px;">点击下方按钮，观察 MVC 各层如何协作处理用户请求：</p>
+            
+            <button class="demo-button" onclick="simulateMVC()">🛒 模拟"查看商品详情"</button>
+            <button class="demo-button" onclick="simulateMVC2()">➕ 模拟"添加新商品"</button>
+            
+            <div id="demoResult" class="demo-result"></div>
+        </div>
+
+        <div class="highlight-box">
+            <div class="highlight-title">🎯 核心要点总结</div>
+            <ul style="line-height: 2; padding-left: 20px;">
+                <li><strong>分离关注点</strong>：每层只做自己擅长的事，降低耦合度</li>
+                <li><strong>提高可维护性</strong>：修改界面不用动业务逻辑，修改数据库不用动页面</li>
+                <li><strong>便于团队协作</strong>：前端专注 View，后端专注 Model 和 Controller</li>
+                <li><strong>增强代码复用</strong>：同一个 Model 可被多个 Controller 调用</li>
+                <li><strong>简化测试</strong>：可独立测试每一层，无需启动完整应用</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function showDetail(role) {
+            const messages = {
+                model: '🧑‍🍳 Model（模型层）\n\n• 职责：管理所有数据和业务逻辑\n• JavaWeb 实现：JavaBean + JDBC + DAO\n• 特点：不知道有 View 和 Controller 的存在\n• 示例：UserDAO 类负责从数据库查询用户信息',
+                view: '📋 View（视图层）\n\n• 职责：向用户展示数据，接收用户输入\n• JavaWeb 实现：JSP / HTML / CSS / JavaScript\n• 特点：不包含业务逻辑，只显示数据\n• 示例：user-list.jsp 遍历显示用户列表',
+                controller: '🤵 Controller（控制层）\n\n• 职责：接收请求，协调 Model 和 View\n• JavaWeb 实现：Servlet\n• 特点：很薄，只做路由转发，不处理具体业务\n• 示例：UserServlet 接收 /user/list 请求，调用 UserDAO，转发到 user-list.jsp'
+            };
+            alert(messages[role]);
+        }
+
+        function simulateMVC() {
+            const result = document.getElementById('demoResult');
+            result.innerHTML = `
+                <h3 style="color: #667eea; margin-bottom: 15px;">📦 查看商品详情流程</h3>
+                <div style="line-height: 2;">
+                    <p><strong>1️⃣ 用户操作：</strong>点击商品链接 <code>/product?id=123</code></p>
+                    <p><strong>2️⃣ Controller（ProductServlet）：</strong>接收请求，获取 id=123</p>
+                    <p><strong>3️⃣ Model（ProductDAO）：</strong>执行 SQL <code>SELECT * FROM products WHERE id=123</code></p>
+                    <p><strong>4️⃣ Model 返回：</strong>Product 对象 {name: "手机", price: 2999, stock: 50}</p>
+                    <p><strong>5️⃣ Controller：</strong>request.setAttribute("product", product)</p>
+                    <p><strong>6️⃣ View（product-detail.jsp）：</strong>渲染 HTML 页面，显示商品信息</p>
+                    <p><strong>7️⃣ 用户看到：</strong>精美的商品详情页面 ✨</p>
+                </div>
+            `;
+            result.classList.add('show');
+        }
+
+        function simulateMVC2() {
+            const result = document.getElementById('demoResult');
+            result.innerHTML = `
+                <h3 style="color: #667eea; margin-bottom: 15px;">➕ 添加新商品流程</h3>
+                <div style="line-height: 2;">
+                    <p><strong>1️⃣ 用户操作：</strong>填写表单（名称、价格、库存），点击提交</p>
+                    <p><strong>2️⃣ View（add-product.jsp）：</strong>收集表单数据，POST 到 /product/add</p>
+                    <p><strong>3️⃣ Controller（ProductServlet）：</strong>接收参数 name, price, stock</p>
+                    <p><strong>4️⃣ Model（ProductService）：</strong>验证数据合法性（价格>0，库存>=0）</p>
+                    <p><strong>5️⃣ Model（ProductDAO）：</strong>执行 INSERT INTO products VALUES(...)</p>
+                    <p><strong>6️⃣ Controller：</strong>重定向到 /product/list（防止重复提交）</p>
+                    <p><strong>7️⃣ 用户看到：</strong>商品列表页，新增的商品已显示 ✅</p>
+                </div>
+            `;
+            result.classList.add('show');
+        }
+    </script>
+</body>
+</html>
