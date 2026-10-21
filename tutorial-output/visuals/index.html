@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#764ba2">
+    <meta name="description" content="ELI5编程基础可视化图解 - 用生活类比和互动动画解释复杂编程概念">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
     <title>ELI5 编程基础可视化图解 - 索引</title>
     <style>
         * {
@@ -327,7 +331,25 @@
                     <span class="feature-tag">依赖倒置</span>
                 </div>
             </a>
+            
+            <a href="09-sorting-algorithms.html" class="card">
+                <div class="card-number">9</div>
+                <h3>排序算法是如何工作的？</h3>
+                <p>理解冒泡排序、快速排序、归并排序的动态过程和性能差异。</p>
+                <div class="analogy">
+                    💡 <strong>生活类比：</strong>学生按身高排队 - 不同的排序策略
+                </div>
+                <div class="features">
+                    <span class="feature-tag">冒泡排序</span>
+                    <span class="feature-tag">快速排序</span>
+                    <span class="feature-tag">归并排序</span>
+                    <span class="feature-tag">性能对比</span>
+                </div>
+            </a>
         </div>
+        
+        <!-- Progress Dashboard -->
+        <div id="progress-dashboard-container"></div>
         
         <div class="footer">
             <p><strong>📚 配套教程：</strong>每个可视化图解都对应教程中的一个章节</p>
@@ -340,7 +362,22 @@
         </div>
     </div>
     
+    <!-- Progress Tracker and Mobile Enhancements -->
+    <script src="js/progress-tracker.js"></script>
+    <script src="js/mobile-enhancements.js"></script>
     <script>
+        // Initialize progress dashboard
+        if (typeof createProgressDashboard === 'function') {
+            createProgressDashboard('progress-dashboard-container');
+        }
+        
+        // Track this page view
+        if (typeof ProgressTracker !== 'undefined') {
+            const tracker = new ProgressTracker();
+            tracker.markLessonViewed('index');
+            tracker.updateStreak();
+        }
+        
         // Add smooth scrolling and click tracking
         document.querySelectorAll('.card').forEach(card => {
             card.addEventListener('click', function(e) {
