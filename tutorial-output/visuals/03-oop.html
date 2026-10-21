@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: 面向对象编程是什么？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .analogy-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .analogy-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .analogy-box p {
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .visual-area {
+            margin: 40px 0;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 15px;
+            min-height: 300px;
+        }
+        
+        .blueprint-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .blueprint {
+            background: white;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 25px;
+            min-width: 280px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .blueprint-title {
+            text-align: center;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .blueprint-section {
+            margin: 10px 0;
+        }
+        
+        .blueprint-section h4 {
+            color: #764ba2;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .attribute-item, .method-item {
+            background: #f0f4ff;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .factory-area {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .factory-building {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            display: inline-block;
+            min-width: 300px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            position: relative;
+        }
+        
+        .factory-label {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .produced-cars {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .car-object {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 150px;
+            animation: carAppear 0.5s ease-out;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        @keyframes carAppear {
+            from { 
+                opacity: 0; 
+                transform: scale(0.5) translateY(-20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: scale(1) translateY(0); 
+            }
+        }
+        
+        .car-name {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .car-detail {
+            font-size: 0.85em;
+            color: #666;
+            margin: 3px 0;
+        }
+        
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .pillar-card {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .pillar-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .pillar-icon {
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .pillar-title {
+            text-align: center;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        
+        .pillar-description {
+            color: #555;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        select {
+            background: white;
+            border: 2px solid #667eea;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            color: #667eea;
+        }
+        
+        .explanation {
+            background: #fff9e6;
+            border: 2px solid #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .explanation h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+        
+        .code-block .type {
+            color: #8be9fd;
+        }
+        
+        .code-block .string {
+            color: #f1fa8c;
+        }
+        
+        .code-block .comment {
+            color: #6272a4;
+        }
+        
+        .code-block .function {
+            color: #50fa7b;
+        }
+        
+        .inheritance-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .tree-node {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            padding: 15px 25px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .tree-node:hover {
+            background: #f0f4ff;
+            transform: scale(1.05);
+        }
+        
+        .tree-node.expanded {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tree-children {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        .tree-connector {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            width: 2px;
+            height: 20px;
+            background: #667eea;
+        }
+        
+        .encapsulation-demo {
+            position: relative;
+            margin: 30px 0;
+        }
+        
+        .dashboard-view {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .engine-complexity {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        
+        .engine-complexity.visible {
+            opacity: 1;
+        }
+        
+        .engine-details {
+            text-align: center;
+            color: #ff6b6b;
+        }
+        
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .switch.active {
+            background: #667eea;
+        }
+        
+        .switch-knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: left 0.3s;
+        }
+        
+        .switch.active .switch-knob {
+            left: 33px;
+        }
+        
+        .real-world-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .example-card {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .example-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .example-title {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .hierarchy-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .hierarchy-list li {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: #f0f4ff;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .highlight {
+            background: yellow;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .polymorphism-demo {
+            margin: 30px 0;
+        }
+        
+        .demo-output {
+            background: #f0f4ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+        }
+        
+        .demo-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏭 ELI5: 面向对象编程是什么？</h1>
+        <p class="subtitle">用汽车工厂理解类与对象</p>
+        
+        <div class="analogy-box">
+            <h3>💡 生活类比：汽车工厂</h3>
+            <p><strong>类（Class）</strong> = 汽车设计蓝图/图纸，定义了汽车应该有什么属性和功能</p>
+            <p><strong>对象（Object）</strong> = 根据蓝图实际生产出来的每一辆汽车</p>
+            <p style="margin-top: 10px;"><strong>关键理解：</strong>一张蓝图可以生产无数辆汽车，每辆车都有自己的颜色、型号，但都遵循同一套设计规范！</p>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">📋 类的设计蓝图</h3>
+            
+            <div class="blueprint-container">
+                <div class="blueprint">
+                    <div class="blueprint-title">Car 类（Class）</div>
+                    
+                    <div class="blueprint-section">
+                        <h4>📦 属性（Attributes）- 数据</h4>
+                        <div class="attribute-item">- color: String</div>
+                        <div class="attribute-item">- brand: String</div>
+                        <div class="attribute-item">- speed: int</div>
+                        <div class="attribute-item">- isRunning: boolean</div>
+                    </div>
+                    
+                    <div class="blueprint-section">
+                        <h4>⚙️ 方法（Methods）- 行为</h4>
+                        <div class="method-item">+ startEngine()</div>
+                        <div class="method-item">+ accelerate(int speed)</div>
+                        <div class="method-item">+ brake()</div>
+                        <div class="method-item">+ getCarInfo()</div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 3em; color: #667eea; align-self: center;">→</div>
+                
+                <div class="factory-area">
+                    <div class="factory-building">
+                        <div class="factory-label">🏭 Car Factory</div>
+                        <p>使用 Car 蓝图生产汽车</p>
+                        
+                        <div class="produced-cars" id="producedCars">
+                            <!-- 动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button onclick="produceCar('sedan')">🚗 生产轿车</button>
+                <button onclick="produceCar('suv')">🚙 生产SUV</button>
+                <button onclick="produceCar('sports')">🏎️ 生产跑车</button>
+                <button onclick="clearCars()">🔄 清空所有汽车</button>
+            </div>
+            
+            <div class="explanation" id="factoryExplanation">
+                <h4>📖 说明</h4>
+                <p>点击按钮使用 Car 蓝图生产不同的汽车对象！每个对象都有自己独立的数据。</p>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🏛️ 面向对象的四大支柱</h3>
+            
+            <div class="pillars-grid">
+                <div class="pillar-card" onclick="showPillarDetail('encapsulation')">
+                    <div class="pillar-icon">🔒</div>
+                    <div class="pillar-title">封装 (Encapsulation)</div>
+                    <div class="pillar-description">
+                        把复杂的东西藏起来，只暴露简单的接口。就像汽车仪表盘，你不需要知道引擎怎么工作，只需要踩油门就行！
+                    </div>
+                </div>
+                
+                <div class="pillar-card" onclick="showPillarDetail('inheritance')">
+                    <div class="pillar-icon">🌳</div>
+                    <div class="pillar-title">继承 (Inheritance)</div>
+                    <div class="pillar-description">
+                        子类可以继承父类的特性，并添加自己的特色。就像 SUV 继承了 Car 的基本功能，还增加了越野能力！
+                    </div>
+                </div>
+                
+                <div class="pillar-card" onclick="showPillarDetail('polymorphism')">
+                    <div class="pillar-icon">🎭</div>
+                    <div class="pillar-title">多态 (Polymorphism)</div>
+                    <div class="pillar-description">
+                        同样的方法调用，不同类型的对象会有不同的行为。就像"驾驶"这个方法，轿车和跑车的表现完全不同！
+                    </div>
+                </div>
+                
+                <div class="pillar-card" onclick="showPillarDetail('abstraction')">
+                    <div class="pillar-icon">🎯</div>
+                    <div class="pillar-title">抽象 (Abstraction)</div>
+                    <div class="pillar-description">
+                        隐藏实现细节，只展示必要的功能。就像方向盘，你不需要知道转向系统如何工作，转动它就能转弯！
+                    </div>
+                </div>
+            </div>
+            
+            <div class="explanation" id="pillarExplanation">
+                <h4>📖 点击上面的卡片查看详细说明</h4>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🔒 封装演示：汽车仪表盘</h3>
+            
+            <div class="encapsulation-demo">
+                <div class="dashboard-view">
+                    <h4 style="color: white; margin-bottom: 20px;">🚗 汽车仪表盘（用户看到的）</h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2em;">⛽</div>
+                            <div>油量: 75%</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2em;">🌡️</div>
+                            <div>温度: 90°C</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 2em;">🚀</div>
+                            <div>速度: 60 km/h</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button onclick="pressGasPedal()" style="margin: 5px;">踩油门</button>
+                        <button onclick="pressBrake()" style="margin: 5px;">踩刹车</button>
+                    </div>
+                </div>
+                
+                <div class="engine-complexity" id="engineComplexity">
+                    <div class="engine-details">
+                        <h3>🔧 引擎内部复杂性（被封装隐藏）</h3>
+                        <ul style="list-style: none; padding: 0; margin-top: 20px;">
+                            <li>• 燃油喷射系统控制</li>
+                            <li>• 点火时序管理</li>
+                            <li>• 冷却循环调节</li>
+                            <li>• 排放控制系统</li>
+                            <li>• 涡轮增压压力调节</li>
+                            <li>• 变速箱齿轮比计算</li>
+                            <li>• ...还有100+个子系统</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toggle-switch">
+                <span>显示引擎内部:</span>
+                <div class="switch" id="encapsulationSwitch" onclick="toggleEncapsulation()">
+                    <div class="switch-knob"></div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h4>💡 封装的好处</h4>
+                <ul>
+                    <li><strong>简化使用</strong>：用户只需关注简单接口，无需了解内部复杂性</li>
+                    <li><strong>保护数据</strong>：防止外部直接修改内部状态，保证数据安全</li>
+                    <li><strong>易于维护</strong>：内部实现可以改变，只要接口不变就不影响使用者</li>
+                    <li><strong>降低耦合</strong>：各部分相对独立，修改一个部分不会影响其他部分</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🌳 继承树可视化</h3>
+            
+            <div class="inheritance-tree" id="inheritanceTree">
+                <div class="tree-node expanded" onclick="toggleTreeNode(this)">
+                    <div>Vehicle（交通工具）</div>
+                    <div style="font-size: 0.8em; margin-top: 5px;">基础属性：速度、方向</div>
+                </div>
+                
+                <div class="tree-children">
+                    <div class="tree-node" onclick="toggleTreeNode(this)" style="position: relative;">
+                        <div class="tree-connector"></div>
+                        <div>Car（汽车）</div>
+                        <div style="font-size: 0.8em; margin-top: 5px;">+ 轮子数量、品牌</div>
+                    </div>
+                    
+                    <div class="tree-node" onclick="toggleTreeNode(this)" style="position: relative;">
+                        <div class="tree-connector"></div>
+                        <div>Boat（船）</div>
+                        <div style="font-size: 0.8em; margin-top: 5px;">+ 排水量、吃水深度</div>
+                    </div>
+                </div>
+                
+                <div class="tree-children" id="carChildren" style="display: none;">
+                    <div class="tree-node" style="position: relative;">
+                        <div class="tree-connector"></div>
+                        <div>Sedan（轿车）</div>
+                        <div style="font-size: 0.8em; margin-top: 5px;">+ 舒适性配置</div>
+                    </div>
+                    
+                    <div class="tree-node" style="position: relative;">
+                        <div class="tree-connector"></div>
+                        <div>SUV</div>
+                        <div style="font-size: 0.8em; margin-top: 5px;">+ 越野能力、大空间</div>
+                    </div>
+                    
+                    <div class="tree-node" style="position: relative;">
+                        <div class="tree-connector"></div>
+                        <div>SportsCar（跑车）</div>
+                        <div style="font-size: 0.8em; margin-top: 5px;">+ 高性能引擎、轻量化</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h4>💡 继承的优势</h4>
+                <ul>
+                    <li><strong>代码复用</strong>：子类自动获得父类的所有属性和方法</li>
+                    <li><strong>层次清晰</strong>：从一般到特殊，结构一目了然</li>
+                    <li><strong>易于扩展</strong>：新增类型只需创建新子类，不影响现有代码</li>
+                    <li><strong>减少重复</strong>：共同特性在父类中定义一次即可</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎭 多态演示：同样的方法，不同的行为</h3>
+            
+            <div class="polymorphism-demo">
+                <div class="controls">
+                    <label>选择车辆类型：</label>
+                    <select id="vehicleType" onchange="updatePolymorphismDemo()">
+                        <option value="sedan">Sedan（轿车）</option>
+                        <option value="suv">SUV</option>
+                        <option value="sports">SportsCar（跑车）</option>
+                    </select>
+                    <button onclick="testDriveMethod()">🚗 测试 drive() 方法</button>
+                </div>
+                
+                <div class="demo-output" id="polymorphismOutput">
+                    <div class="demo-result">
+                        <strong>选择车辆类型后点击"测试 drive() 方法"</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h4>💡 多态的核心思想</h4>
+                <ul>
+                    <li><strong>统一接口</strong>：所有车辆都有 drive() 方法</li>
+                    <li><strong>不同实现</strong>：每种车辆的 drive() 行为不同</li>
+                    <li><strong>运行时决定</strong>：程序运行时才确定调用哪个版本</li>
+                    <li><strong>易于扩展</strong>：新增车辆类型无需修改现有代码</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">💻 代码示例：继承与多态</h3>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">C++ 版本 - Shape 基类</h4>
+            <div class="code-block">
+<span class="keyword">class</span> <span class="type">Shape</span> {  <span class="comment">// 基类</span>
+<span class="keyword">protected</span>:
+    <span class="type">string</span> color;
+    
+<span class="keyword">public</span>:
+    <span class="type">Shape</span>(<span class="type">string</span> c) : color(c) {}
+    
+    <span class="comment">// 虚函数 - 支持多态</span>
+    <span class="keyword">virtual</span> <span class="type">double</span> <span class="function">area</span>() = <span class="number">0</span>;  <span class="comment">// 纯虚函数</span>
+    <span class="keyword">virtual</span> <span class="type">void</span> <span class="function">draw</span>() {
+        cout << <span class="string">"Drawing a "</span> << color << <span class="string">" shape"</span> << endl;
+    }
+};
+
+<span class="keyword">class</span> <span class="type">Circle</span> : <span class="keyword">public</span> <span class="type">Shape</span> {  <span class="comment">// 派生类</span>
+<span class="keyword">private</span>:
+    <span class="type">double</span> radius;
+    
+<span class="keyword">public</span>:
+    <span class="type">Circle</span>(<span class="type">string</span> c, <span class="type">double</span> r) : <span class="type">Shape</span>(c), radius(r) {}
+    
+    <span class="type">double</span> <span class="function">area</span>() <span class="keyword">override</span> {
+        <span class="keyword">return</span> <span class="number">3.14159</span> * radius * radius;
+    }
+    
+    <span class="type">void</span> <span class="function">draw</span>() <span class="keyword">override</span> {
+        cout << <span class="string">"Drawing a "</span> << color << <span class="string">" circle with radius "</span> 
+             << radius << endl;
+    }
+};
+
+<span class="keyword">class</span> <span class="type">Square</span> : <span class="keyword">public</span> <span class="type">Shape</span> {  <span class="comment">// 派生类</span>
+<span class="keyword">private</span>:
+    <span class="type">double</span> side;
+    
+<span class="keyword">public</span>:
+    <span class="type">Square</span>(<span class="type">string</span> c, <span class="type">double</span> s) : <span class="type">Shape</span>(c), side(s) {}
+    
+    <span class="type">double</span> <span class="function">area</span>() <span class="keyword">override</span> {
+        <span class="keyword">return</span> side * side;
+    }
+    
+    <span class="type">void</span> <span class="function">draw</span>() <span class="keyword">override</span> {
+        cout << <span class="string">"Drawing a "</span> << color << <span class="string">" square with side "</span> 
+             << side << endl;
+    }
+};
+
+<span class="comment">// 多态使用示例</span>
+<span class="type">void</span> <span class="function">renderShapes</span>(vector&lt;Shape*&gt;& shapes) {
+    <span class="keyword">for</span> (<span class="keyword">auto</span>* shape : shapes) {
+        shape->draw();   <span class="comment">// 根据实际类型调用不同版本</span>
+        cout << <span class="string">"Area: "</span> << shape->area() << endl;
+    }
+}
+            </div>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">Java 版本 - Abstract Shape 类</h4>
+            <div class="code-block">
+<span class="keyword">abstract class</span> <span class="type">Shape</span> {  <span class="comment">// 抽象基类</span>
+    <span class="keyword">protected</span> String color;
+    
+    <span class="keyword">public</span> <span class="type">Shape</span>(String color) {
+        <span class="keyword">this</span>.color = color;
+    }
+    
+    <span class="comment">// 抽象方法 - 必须由子类实现</span>
+    <span class="keyword">public abstract</span> <span class="type">double</span> <span class="function">area</span>();
+    
+    <span class="comment">// 具体方法 - 子类可以重写</span>
+    <span class="keyword">public void</span> <span class="function">draw</span>() {
+        System.out.println(<span class="string">"Drawing a "</span> + color + <span class="string">" shape"</span>);
+    }
+}
+
+<span class="keyword">class</span> <span class="type">Circle</span> <span class="keyword">extends</span> <span class="type">Shape</span> {  <span class="comment">// 子类</span>
+    <span class="keyword">private</span> <span class="type">double</span> radius;
+    
+    <span class="keyword">public</span> <span class="type">Circle</span>(String color, <span class="type">double</span> radius) {
+        <span class="keyword">super</span>(color);  <span class="comment">// 调用父类构造函数</span>
+        <span class="keyword">this</span>.radius = radius;
+    }
+    
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="type">double</span> <span class="function">area</span>() {
+        <span class="keyword">return</span> Math.PI * radius * radius;
+    }
+    
+    <span class="annotation">@Override</span>
+    <span class="keyword">public void</span> <span class="function">draw</span>() {
+        System.out.println(<span class="string">"Drawing a "</span> + color + 
+                          <span class="string">" circle with radius "</span> + radius);
+    }
+}
+
+<span class="keyword">class</span> <span class="type">Square</span> <span class="keyword">extends</span> <span class="type">Shape</span> {  <span class="comment">// 子类</span>
+    <span class="keyword">private</span> <span class="type">double</span> side;
+    
+    <span class="keyword">public</span> <span class="type">Square</span>(String color, <span class="type">double</span> side) {
+        <span class="keyword">super</span>(color);
+        <span class="keyword">this</span>.side = side;
+    }
+    
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="type">double</span> <span class="function">area</span>() {
+        <span class="keyword">return</span> side * side;
+    }
+    
+    <span class="annotation">@Override</span>
+    <span class="keyword">public void</span> <span class="function">draw</span>() {
+        System.out.println(<span class="string">"Drawing a "</span> + color + 
+                          <span class="string">" square with side "</span> + side);
+    }
+}
+
+<span class="comment">// 多态使用示例</span>
+<span class="keyword">public static void</span> <span class="function">renderShapes</span>(List&lt;Shape&gt; shapes) {
+    <span class="keyword">for</span> (Shape shape : shapes) {
+        shape.draw();   <span class="comment">// 运行时多态</span>
+        System.out.println(<span class="string">"Area: "</span> + shape.area());
+    }
+}
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚡ 编程范式对比：过程式 vs 面向对象</h3>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>维度</th>
+                        <th>过程式编程 (Procedural)</th>
+                        <th>面向对象编程 (OOP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>核心思想</strong></td>
+                        <td>按步骤执行函数</td>
+                        <td>对象之间交互协作</td>
+                    </tr>
+                    <tr>
+                        <td><strong>数据组织</strong></td>
+                        <td>数据和函数分离</td>
+                        <td>数据和方法封装在一起</td>
+                    </tr>
+                    <tr>
+                        <td><strong>代码复用</strong></td>
+                        <td>函数调用</td>
+                        <td>继承、组合、多态</td>
+                    </tr>
+                    <tr>
+                        <td><strong>扩展性</strong></td>
+                        <td>修改现有代码</td>
+                        <td>添加新类，开闭原则</td>
+                    </tr>
+                    <tr>
+                        <td><strong>适合场景</strong></td>
+                        <td>简单脚本、算法实现</td>
+                        <td>大型系统、复杂业务逻辑</td>
+                    </tr>
+                    <tr>
+                        <td><strong>学习曲线</strong></td>
+                        <td>较平缓，容易上手</td>
+                        <td>较陡峭，概念较多</td>
+                    </tr>
+                    <tr>
+                        <td><strong>维护成本</strong></td>
+                        <td>小规模容易，大规模困难</td>
+                        <td>初期投入大，长期易维护</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="explanation" style="background: #e6f3ff; border-color: #667eea;">
+                <h4 style="color: #667eea;">🎯 如何选择？</h4>
+                <ul>
+                    <li><strong>选择过程式</strong>：小型工具脚本、数学计算、性能敏感的底层代码</li>
+                    <li><strong>选择面向对象</strong>：企业应用、游戏开发、GUI程序、需要长期维护的大型项目</li>
+                    <li><strong>现代趋势</strong>：多数语言支持混合范式，根据实际情况灵活选择</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🌍 现实世界中的OOP应用</h3>
+            
+            <div class="real-world-examples">
+                <div class="example-card">
+                    <div class="example-title">
+                        <span>🎮</span>
+                        <span>游戏角色系统</span>
+                    </div>
+                    <ul class="hierarchy-list">
+                        <li><strong>Character</strong>（基类）- 生命值、攻击力</li>
+                        <li>&nbsp;&nbsp;├─ <strong>Player</strong> - 经验值、装备槽</li>
+                        <li>&nbsp;&nbsp;├─ <strong>Enemy</strong> - AI行为、掉落表</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ Boss - 特殊技能、阶段转换</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ Minion - 群体行为、召唤机制</li>
+                    </ul>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-title">
+                        <span>🖥️</span>
+                        <span>UI组件系统</span>
+                    </div>
+                    <ul class="hierarchy-list">
+                        <li><strong>Widget</strong>（基类）- 位置、尺寸、事件处理</li>
+                        <li>&nbsp;&nbsp;├─ <strong>Button</strong> - 点击事件、样式</li>
+                        <li>&nbsp;&nbsp;├─ <strong>TextField</strong> - 文本输入、验证</li>
+                        <li>&nbsp;&nbsp;├─ <strong>CheckBox</strong> - 选中状态、标签</li>
+                        <li>&nbsp;&nbsp;└─ <strong>ComboBox</strong> - 下拉选项、多选</li>
+                    </ul>
+                </div>
+                
+                <div class="example-card">
+                    <div class="example-title">
+                        <span>💳</span>
+                        <span>支付系统</span>
+                    </div>
+                    <ul class="hierarchy-list">
+                        <li><strong>PaymentMethod</strong>（基类）- 金额、货币、验证</li>
+                        <li>&nbsp;&nbsp;├─ <strong>CreditCard</strong> - 卡号、CVV、有效期</li>
+                        <li>&nbsp;&nbsp;├─ <strong>PayPal</strong> - 邮箱、API令牌</li>
+                        <li>&nbsp;&nbsp;├─ <strong>Alipay</strong> - 二维码、扫码支付</li>
+                        <li>&nbsp;&nbsp;└─ <strong>CryptoWallet</strong> - 区块链地址、私钥</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="explanation" style="background: #e6f3ff; border-color: #667eea;">
+            <h4 style="color: #667eea;">🎯 核心要点总结</h4>
+            <ul>
+                <li><strong>类与对象</strong>：类是蓝图，对象是根据蓝图创建的实例</li>
+                <li><strong>封装</strong>：隐藏内部复杂性，提供简单接口</li>
+                <li><strong>继承</strong>：子类复用父类特性，形成层次结构</li>
+                <li><strong>多态</strong>：同一接口，不同实现，运行时决定</li>
+                <li><strong>抽象</strong>：关注做什么，而非怎么做</li>
+                <li><strong>OOP优势</strong>：代码复用、易于维护、贴近现实、团队协作友好</li>
+                <li><strong>适用场景</strong>：大型项目、复杂业务、需要长期维护的系统</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        let carCount = 0;
+        const carTypes = {
+            sedan: { name: '轿车', color: '蓝色', features: ['舒适座椅', '省油'] },
+            suv: { name: 'SUV', color: '黑色', features: ['越野轮胎', '大空间'] },
+            sports: { name: '跑车', color: '红色', features: ['V8引擎', '碳纤维车身'] }
+        };
+        
+        function produceCar(type) {
+            carCount++;
+            const carInfo = carTypes[type];
+            const container = document.getElementById('producedCars');
+            
+            const carDiv = document.createElement('div');
+            carDiv.className = 'car-object';
+            carDiv.innerHTML = `
+                <div class="car-name">${carInfo.color}${carInfo.name} #${carCount}</div>
+                <div class="car-detail">ID: ${Date.now().toString().slice(-6)}</div>
+                <div class="car-detail">特性: ${carInfo.features.join(', ')}</div>
+            `;
+            
+            container.appendChild(carDiv);
+            updateFactoryExplanation('add', carInfo.name);
+        }
+        
+        function clearCars() {
+            document.getElementById('producedCars').innerHTML = '';
+            carCount = 0;
+            updateFactoryExplanation('clear');
+        }
+        
+        function updateFactoryExplanation(action, carName = '') {
+            const expl = document.getElementById('factoryExplanation');
+            let html = '<h4>📖 工厂运作说明</h4>';
+            
+            switch(action) {
+                case 'add':
+                    html += `<p>✅ 成功生产了一辆新的<strong>${carName}</strong>！</p>`;
+                    html += '<ul>';
+                    html += '<li>1️⃣ 读取 Car 类的设计蓝图</li>';
+                    html += '<li>2️⃣ 分配内存空间存储这辆车的专属数据</li>';
+                    html += '<li>3️⃣ 初始化属性（颜色、型号等）</li>';
+                    html += '<li>4️⃣ 绑定方法引用（startEngine, accelerate等）</li>';
+                    html += '<li><strong>关键点：</strong>每辆车都是独立的对象，互不影响！</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'clear':
+                    html += '<p>🔄 所有汽车对象已被销毁，内存已释放</p>';
+                    break;
+            }
+            
+            expl.innerHTML = html;
+        }
+        
+        function showPillarDetail(pillar) {
+            const expl = document.getElementById('pillarExplanation');
+            let html = '<h4>📖 ';
+            
+            switch(pillar) {
+                case 'encapsulation':
+                    html += '封装 (Encapsulation) 详解</h4>';
+                    html += '<p><strong>核心思想：</strong>把数据和操作数据的方法打包在一起，隐藏内部实现细节。</p>';
+                    html += '<ul>';
+                    html += '<li><strong>访问修饰符：</strong>public（公开）、private（私有）、protected（受保护）</li>';
+                    html += '<li><strong>Getter/Setter：</strong>通过方法访问私有属性，可以添加验证逻辑</li>';
+                    html += '<li><strong>好处：</strong>数据安全、接口稳定、易于维护</li>';
+                    html += '<li><strong>例子：</strong>汽车的引擎很复杂，但你只需要踩油门这个简单接口</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'inheritance':
+                    html += '继承 (Inheritance) 详解</h4>';
+                    html += '<p><strong>核心思想：</strong>子类自动获得父类的所有属性和方法，可以添加或重写。</p>';
+                    html += '<ul>';
+                    html += '<li><strong>is-a关系：</strong>SUV "is a" Car，Car "is a" Vehicle</li>';
+                    html += '<li><strong>代码复用：</strong>共同特性在父类中定义一次</li>';
+                    html += '<li><strong>方法重写：</strong>子类可以提供自己的实现版本</li>';
+                    html += '<li><strong>构造函数链：</strong>先调用父类构造，再执行子类构造</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'polymorphism':
+                    html += '多态 (Polymorphism) 详解</h4>';
+                    html += '<p><strong>核心思想：</strong>同一个方法调用，在不同类型的对象上表现出不同行为。</p>';
+                    html += '<ul>';
+                    html += '<li><strong>编译时多态：</strong>方法重载（Overloading）- 同名不同参数</li>';
+                    html += '<li><strong>运行时多态：</strong>方法重写（Overriding）- 虚函数/抽象方法</li>';
+                    html += '<li><strong>向上转型：</strong>父类引用指向子类对象</li>';
+                    html += '<li><strong>动态绑定：</strong>运行时根据实际对象类型决定调用哪个方法</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'abstraction':
+                    html += '抽象 (Abstraction) 详解</h4>';
+                    html += '<p><strong>核心思想：</strong>提取事物的本质特征，忽略不必要的细节。</p>';
+                    html += '<ul>';
+                    html += '<li><strong>抽象类：</strong>不能被实例化，只能作为父类（如 Shape）</li>';
+                    html += '<li><strong>接口：</strong>定义行为规范，不关心实现（如 Drivable）</li>';
+                    html += '<li><strong>关注点分离：</strong>用户只关心"能做什么"，不关心"怎么做"</li>';
+                    html += '<li><strong>例子：</strong>你只需要知道方向盘能转弯，不需要懂转向系统原理</li>';
+                    html += '</ul>';
+                    break;
+            }
+            
+            expl.innerHTML = html;
+        }
+        
+        function toggleEncapsulation() {
+            const switchEl = document.getElementById('encapsulationSwitch');
+            const engineEl = document.getElementById('engineComplexity');
+            
+            switchEl.classList.toggle('active');
+            engineEl.classList.toggle('visible');
+        }
+        
+        function pressGasPedal() {
+            alert('油门已踩下！引擎自动处理复杂的燃油喷射、点火等操作。这就是封装的力量！');
+        }
+        
+        function pressBrake() {
+            alert('刹车已踩下！制动系统自动控制液压、ABS防抱死等复杂逻辑。用户无需关心内部实现！');
+        }
+        
+        function toggleTreeNode(node) {
+            node.classList.toggle('expanded');
+            
+            // 如果是Car节点，显示/隐藏其子节点
+            if (node.textContent.includes('Car')) {
+                const children = document.getElementById('carChildren');
+                children.style.display = children.style.display === 'none' ? 'flex' : 'none';
+            }
+        }
+        
+        function updatePolymorphismDemo() {
+            // 更新下拉框时的预处理
+        }
+        
+        function testDriveMethod() {
+            const vehicleType = document.getElementById('vehicleType').value;
+            const output = document.getElementById('polymorphismOutput');
+            
+            let result = '';
+            switch(vehicleType) {
+                case 'sedan':
+                    result = `
+                        <div class="demo-result">
+                            <strong>Sedan.drive() 被调用：</strong><br>
+                            🚗 平稳加速...<br>
+                            💺 悬挂系统提供舒适体验<br>
+                            ⛽ 油耗: 6L/100km<br>
+                            🔊 噪音: 安静
+                        </div>
+                    `;
+                    break;
+                case 'suv':
+                    result = `
+                        <div class="demo-result">
+                            <strong>SUV.drive() 被调用：</strong><br>
+                            🚙 强劲动力输出...<br>
+                            🏔️ 四驱系统启动<br>
+                            ⛽ 油耗: 10L/100km<br>
+                            🔊 噪音: 适中
+                        </div>
+                    `;
+                    break;
+                case 'sports':
+                    result = `
+                        <div class="demo-result">
+                            <strong>SportsCar.drive() 被调用：</strong><br>
+                            🏎️ 弹射起步！<br>
+                            🚀 0-100km/h: 3.2秒<br>
+                            ⛽ 油耗: 15L/100km<br>
+                            🔊 声浪: 轰鸣！
+                        </div>
+                    `;
+                    break;
+            }
+            
+            output.innerHTML = result + `
+                <div class="demo-result" style="margin-top: 15px; background: #e6f3ff;">
+                    <strong>💡 多态解释：</strong><br>
+                    虽然调用的都是 <code>drive()</code> 方法，但由于对象类型不同，实际执行的行为完全不同！<br>
+                    这就是<strong>运行时多态</strong>的魅力 - 编译器不知道会调用哪个版本，只有运行时才能确定。
+                </div>
+            `;
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 预生产一辆车作为示例
+            produceCar('sedan');
+        });
+    </script>
+</body>
+</html>

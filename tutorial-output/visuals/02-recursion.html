@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: 递归是如何工作的？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .analogy-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .analogy-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .analogy-box p {
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .visual-area {
+            margin: 40px 0;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 15px;
+            min-height: 300px;
+        }
+        
+        .dolls-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            position: relative;
+            min-height: 400px;
+        }
+        
+        .doll-wrapper {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .doll-wrapper:hover {
+            transform: scale(1.05);
+        }
+        
+        .doll {
+            width: 120px;
+            height: 160px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 60px 60px 20px 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.5s ease;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px) scale(0.8); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .doll.opened {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+        
+        .doll.base-case {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            animation: pulse 2s infinite;
+        }
+        
+        .doll-number {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .doll-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .doll-status {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            white-space: nowrap;
+        }
+        
+        .call-stack {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 30px 0;
+            min-height: 200px;
+        }
+        
+        .call-stack h4 {
+            color: #f8f8f2;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .stack-frame {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            margin: 8px 0;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 1em;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .stack-frame.returning {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            animation: slideOut 0.3s ease-in;
+        }
+        
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(20px); }
+        }
+        
+        .stack-depth {
+            color: #8be9fd;
+            font-size: 0.9em;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #f0f4ff;
+            padding: 15px 25px;
+            border-radius: 25px;
+        }
+        
+        .slider-container label {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 200px;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .explanation {
+            background: #fff9e6;
+            border: 2px solid #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .explanation h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .highlight {
+            background: yellow;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .step.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            animation: bounce 0.5s;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+        
+        .code-block .type {
+            color: #8be9fd;
+        }
+        
+        .code-block .string {
+            color: #f1fa8c;
+        }
+        
+        .code-block .comment {
+            color: #6272a4;
+        }
+        
+        .code-block .function {
+            color: #50fa7b;
+        }
+        
+        .pitfall-box {
+            background: #ffe6e6;
+            border-left: 5px solid #ff6b6b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .pitfall-box h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .pitfall-box ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .pitfall-box li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .result-display {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(17, 153, 142, 0.3);
+        }
+        
+        .arrow-indicator {
+            font-size: 2em;
+            color: #667eea;
+            animation: pulse 1.5s infinite;
+            margin: 10px 0;
+        }
+        
+        .return-value {
+            background: #e6f7ff;
+            border: 2px solid #667eea;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 5px 0;
+            font-family: monospace;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪆 递归就像俄罗斯套娃</h1>
+        <p class="subtitle">打开一个娃娃，里面还有一个更小的，直到最小的那个（基准情况）</p>
+        
+        <div class="analogy-box">
+            <h3>💡 生活类比</h3>
+            <p>想象一组俄罗斯套娃：</p>
+            <ul style="margin-left: 20px; margin-top: 10px; color: #555;">
+                <li><strong>每个套娃</strong> = 一次函数调用</li>
+                <li><strong>打开套娃</strong> = 调用自身（递归）</li>
+                <li><strong>最小的套娃</strong> = 基准情况（base case），不再继续打开</li>
+                <li><strong>合上套娃的过程</strong> = 返回值逐层向上传递</li>
+            </ul>
+            <p style="margin-top: 10px;"><strong>关键概念：</strong>递归必须有一个停止条件（基准情况），否则会无限循环下去！</p>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎮 交互式演示：factorial(n)</h3>
+            
+            <div class="step-indicator">
+                <div class="step active" id="step1">1</div>
+                <div class="step" id="step2">2</div>
+                <div class="step" id="step3">3</div>
+                <div class="step" id="step4">4</div>
+                <div class="step" id="step5">5</div>
+            </div>
+            
+            <div class="controls">
+                <button onclick="startAnimation()" id="startBtn">▶️ 开始动画</button>
+                <button onclick="pauseAnimation()" id="pauseBtn" disabled>⏸️ 暂停</button>
+                <button onclick="resetAnimation()">🔄 重置</button>
+                
+                <div class="slider-container">
+                    <label for="nSlider">输入值 n:</label>
+                    <input type="range" id="nSlider" min="1" max="10" value="5" onchange="updateSliderValue(this.value)">
+                    <span class="slider-value" id="sliderValue">5</span>
+                </div>
+            </div>
+            
+            <div class="dolls-container" id="dollsContainer">
+                <!-- 动态生成套娃 -->
+            </div>
+            
+            <div class="call-stack">
+                <h4>📚 调用栈 (Call Stack) - 深度: <span id="stackDepth">0</span></h4>
+                <div id="stackFrames">
+                    <p style="color: #888; text-align: center;">点击"开始动画"查看调用过程</p>
+                </div>
+            </div>
+            
+            <div class="result-display" id="resultDisplay" style="display: none;">
+                🎉 最终结果: factorial(<span id="resultN">5</span>) = <span id="resultValue">120</span>
+            </div>
+            
+            <div class="explanation" id="explanation">
+                <h4>📖 当前状态说明</h4>
+                <p>选择输入值 n，然后点击"开始动画"观看递归过程！</p>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚡ 性能对比：普通递归 vs 记忆化递归</h3>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>特性</th>
+                        <th>普通递归</th>
+                        <th>记忆化递归 (Memoization)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>时间复杂度</strong></td>
+                        <td>🐢 O(2ⁿ) - 指数级（如斐波那契）</td>
+                        <td>⭐ O(n) - 线性级</td>
+                    </tr>
+                    <tr>
+                        <td><strong>空间复杂度</strong></td>
+                        <td>📦 O(n) - 调用栈深度</td>
+                        <td>📦 O(n) - 调用栈 + 缓存</td>
+                    </tr>
+                    <tr>
+                        <td><strong>重复计算</strong></td>
+                        <td>❌ 大量重复计算相同子问题</td>
+                        <td>✅ 缓存结果，避免重复</td>
+                    </tr>
+                    <tr>
+                        <td><strong>适用场景</strong></td>
+                        <td>简单问题、子问题不重叠</td>
+                        <td>子问题重叠的动态规划问题</td>
+                    </tr>
+                    <tr>
+                        <td><strong>栈溢出风险</strong></td>
+                        <td>⚠️ 深度过大时可能栈溢出</td>
+                        <td>⚠️ 同样存在栈溢出风险</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="explanation" style="background: #e6f3ff; border-color: #667eea;">
+                <h4 style="color: #667eea;">⚠️ 栈溢出风险说明</h4>
+                <ul>
+                    <li><strong>什么是栈溢出？</strong>每次函数调用都会在调用栈中占用空间，如果递归太深（如 n > 10000），会耗尽栈空间导致程序崩溃</li>
+                    <li><strong>如何避免？</strong>
+                        <ul>
+                            <li>使用迭代替代深层递归</li>
+                            <li>设置合理的递归深度限制</li>
+                            <li>使用尾递归优化（某些语言支持）</li>
+                            <li>改用动态规划（自底向上）</li>
+                        </ul>
+                    </li>
+                    <li><strong>实际限制：</strong>C++/Java 默认栈大小通常支持 1000-10000 层递归，具体取决于系统和编译器设置</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">💻 代码实现：带记忆化的阶乘</h3>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">C++ 版本</h4>
+            <div class="code-block">
+<span class="keyword">#include</span> <span class="string">&lt;iostream&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;unordered_map&gt;</span>
+<span class="keyword">using namespace</span> std;
+
+<span class="comment">// 全局缓存（记忆化）</span>
+unordered_map&lt;<span class="type">int</span>, <span class="type">long long</span>&gt; memo;
+
+<span class="type">long long</span> <span class="function">factorial</span>(<span class="type">int</span> n) {
+    <span class="comment">// 基准情况：0! = 1, 1! = 1</span>
+    <span class="keyword">if</span> (n &lt;= 1) <span class="keyword">return</span> 1;
+    
+    <span class="comment">// 检查缓存</span>
+    <span class="keyword">if</span> (memo.find(n) != memo.end()) {
+        <span class="keyword">return</span> memo[n];  <span class="comment">// 直接返回缓存结果</span>
+    }
+    
+    <span class="comment">// 递归计算并缓存</span>
+    <span class="type">long long</span> result = n * factorial(n - 1);
+    memo[n] = result;
+    <span class="keyword">return</span> result;
+}
+
+<span class="type">int</span> main() {
+    cout &lt;&lt; <span class="string">"5! = "</span> &lt;&lt; factorial(5) &lt;&lt; endl;  <span class="comment">// 输出: 120</span>
+    <span class="keyword">return</span> 0;
+}
+            </div>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">Java 版本</h4>
+            <div class="code-block">
+<span class="keyword">import</span> java.util.HashMap;
+<span class="keyword">import</span> java.util.Map;
+
+<span class="keyword">public class</span> <span class="type">Factorial</span> {
+    <span class="comment">// 缓存（记忆化）</span>
+    <span class="keyword">private static</span> Map&lt;Integer, Long&gt; memo = <span class="keyword">new</span> HashMap&lt;&gt;();
+    
+    <span class="keyword">public static</span> <span class="type">long</span> <span class="function">factorial</span>(<span class="type">int</span> n) {
+        <span class="comment">// 基准情况：0! = 1, 1! = 1</span>
+        <span class="keyword">if</span> (n &lt;= 1) <span class="keyword">return</span> 1;
+        
+        <span class="comment">// 检查缓存</span>
+        <span class="keyword">if</span> (memo.containsKey(n)) {
+            <span class="keyword">return</span> memo.get(n);  <span class="comment">// 直接返回缓存结果</span>
+        }
+        
+        <span class="comment">// 递归计算并缓存</span>
+        <span class="type">long</span> result = n * factorial(n - 1);
+        memo.put(n, result);
+        <span class="keyword">return</span> result;
+    }
+    
+    <span class="keyword">public static void</span> main(String[] args) {
+        System.out.println(<span class="string">"5! = "</span> + factorial(5));  <span class="comment">// 输出: 120</span>
+    }
+}
+            </div>
+        </div>
+        
+        <div class="pitfall-box">
+            <h4>⚠️ 常见陷阱</h4>
+            <ul>
+                <li><strong>缺少基准情况</strong>：如果没有停止条件，递归会无限进行下去，导致栈溢出（Stack Overflow Error）
+                    <div class="code-block" style="margin-top: 10px;">
+<span class="comment">// ❌ 错误示例：没有基准情况</span>
+<span class="type">int</span> badRecursion(<span class="type">int</span> n) {
+    <span class="keyword">return</span> badRecursion(n - 1);  <span class="comment">// 永远不停止！</span>
+}
+                    </div>
+                </li>
+                <li><strong>递归过深</strong>：即使有基准情况，如果 n 太大（如 100000），仍可能导致栈溢出
+                    <div class="code-block" style="margin-top: 10px;">
+<span class="comment">// ✅ 解决方案：改用迭代</span>
+<span class="type">long long</span> factorialIterative(<span class="type">int</span> n) {
+    <span class="type">long long</span> result = 1;
+    <span class="keyword">for</span> (<span class="type">int</span> i = 2; i &lt;= n; i++) {
+        result *= i;
+    }
+    <span class="keyword">return</span> result;
+}
+                    </div>
+                </li>
+                <li><strong>何时使用迭代而非递归？</strong>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>✅ 递归深度可预测且较小（n < 1000）</li>
+                        <li>✅ 问题天然具有递归结构（树遍历、分治算法）</li>
+                        <li>❌ 递归深度不确定或可能很大 → 用迭代</li>
+                        <li>❌ 性能敏感且子问题重叠 → 用动态规划</li>
+                        <li>❌ 需要精确控制内存使用 → 用迭代</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="explanation" style="background: #e6f3ff; border-color: #667eea;">
+            <h4 style="color: #667eea;">🎯 核心要点总结</h4>
+            <ul>
+                <li><strong>递归的本质</strong>：函数调用自身，每次调用解决一个更小的子问题</li>
+                <li><strong>两个必要元素</strong>：
+                    <ul>
+                        <li>基准情况（Base Case）：停止递归的条件</li>
+                        <li>递归步骤（Recursive Case）：向基准情况靠近的调用</li>
+                    </ul>
+                </li>
+                <li><strong>优点</strong>：代码简洁优雅，适合解决具有自相似结构的问题（树、图、分治）</li>
+                <li><strong>缺点</strong>：可能有栈溢出风险，重复计算导致效率低</li>
+                <li><strong>优化技巧</strong>：记忆化（Memoization）缓存中间结果，避免重复计算</li>
+                <li><strong>适用场景</strong>：树遍历、快速排序、归并排序、动态规划、回溯算法</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        let currentN = 5;
+        let isAnimating = false;
+        let animationPaused = false;
+        let currentStep = 0;
+        let animationInterval = null;
+        let callStack = [];
+        let returnValues = [];
+        
+        function updateSliderValue(value) {
+            currentN = parseInt(value);
+            document.getElementById('sliderValue').textContent = value;
+            resetAnimation();
+        }
+        
+        function renderDolls(n, highlightIndex = -1, isBaseCase = false) {
+            const container = document.getElementById('dollsContainer');
+            container.innerHTML = '';
+            
+            if (n === 0) {
+                container.innerHTML = '<div style="color: #999; font-size: 1.2em;">还没有套娃 - 点击"开始动画"</div>';
+                return;
+            }
+            
+            // 创建从大到小的套娃
+            for (let i = n; i >= 1; i--) {
+                const dollWrapper = document.createElement('div');
+                dollWrapper.className = 'doll-wrapper';
+                
+                const doll = document.createElement('div');
+                doll.className = 'doll';
+                
+                // 根据索引设置不同大小
+                const scale = 0.6 + (i / n) * 0.4;
+                doll.style.transform = `scale(${scale})`;
+                
+                if (i === highlightIndex) {
+                    doll.classList.add('opened');
+                }
+                
+                if (isBaseCase && i === 1) {
+                    doll.classList.add('base-case');
+                }
+                
+                doll.innerHTML = `
+                    <div class="doll-number">${i}</div>
+                    <div class="doll-label">factorial(${i})</div>
+                `;
+                
+                const status = document.createElement('div');
+                status.className = 'doll-status';
+                status.textContent = i === highlightIndex ? '正在计算...' : '等待中';
+                if (isBaseCase && i === 1) {
+                    status.textContent = '基准情况!';
+                    status.style.background = '#11998e';
+                }
+                
+                dollWrapper.appendChild(doll);
+                dollWrapper.appendChild(status);
+                container.appendChild(dollWrapper);
+            }
+        }
+        
+        function updateStack(depth, functionName, isReturning = false, returnValue = null) {
+            const stackContainer = document.getElementById('stackFrames');
+            const depthDisplay = document.getElementById('stackDepth');
+            
+            if (!isReturning) {
+                // 添加新帧
+                const frame = document.createElement('div');
+                frame.className = 'stack-frame';
+                frame.id = `frame-${depth}`;
+                frame.innerHTML = `
+                    <span>${functionName}</span>
+                    <span class="stack-depth">深度: ${depth}</span>
+                `;
+                stackContainer.appendChild(frame);
+                callStack.push(depth);
+            } else {
+                // 标记为返回
+                const frame = document.getElementById(`frame-${depth}`);
+                if (frame) {
+                    frame.classList.add('returning');
+                    const returnDiv = document.createElement('div');
+                    returnDiv.className = 'return-value';
+                    returnDiv.textContent = `← 返回: ${returnValue}`;
+                    frame.appendChild(returnDiv);
+                    
+                    setTimeout(() => {
+                        frame.remove();
+                        callStack.pop();
+                    }, 500);
+                }
+            }
+            
+            depthDisplay.textContent = callStack.length;
+        }
+        
+        function updateStep(stepNum) {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`step${i}`).classList.remove('active');
+            }
+            if (stepNum > 0 && stepNum <= 5) {
+                document.getElementById(`step${stepNum}`).classList.add('active');
+            }
+        }
+        
+        function updateExplanation(phase, details = '') {
+            const expl = document.getElementById('explanation');
+            let html = '<h4>📖 当前状态说明</h4>';
+            
+            switch(phase) {
+                case 'start':
+                    html += `<p>🚀 开始计算 factorial(<strong>${currentN}</strong>)</p>`;
+                    html += '<ul>';
+                    html += '<li>递归就像打开俄罗斯套娃：每次调用都会打开一个更小的套娃</li>';
+                    html += '<li>我们需要一直打开，直到找到最小的那个（基准情况）</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'winding':
+                    html += `<p>📥 <strong>递归展开阶段</strong>：不断调用自身</p>`;
+                    html += '<ul>';
+                    html += `<li>每次调用 factorial(n) 都需要先知道 factorial(${details})</li>`;
+                    html += '<li>调用栈逐渐增长，就像套娃一层层打开</li>';
+                    html += '<li>每次调用都保存当前状态，等待子调用的结果</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'base':
+                    html += `<p>🎯 <strong>到达基准情况</strong>：factorial(1) = 1</p>`;
+                    html += '<ul>';
+                    html += '<li>找到了最小的套娃！这是我们的停止条件</li>';
+                    html += '<li>基准情况不需要再递归，直接返回结果</li>';
+                    html += '<li>现在开始逐层返回，把结果传递给上一层</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'unwinding':
+                    html += `<p>📤 <strong>递归回溯阶段</strong>：逐层返回结果</p>`;
+                    html += '<ul>';
+                    html += `<li>${details}</li>`;
+                    html += '<li>每层收到子调用的结果后，完成自己的计算</li>';
+                    html += '<li>就像把套娃一层层合上，同时携带着里面的信息</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'complete':
+                    html += `<p>✅ <strong>计算完成</strong>！</p>`;
+                    html += `<ul>`;
+                    html += `<li>最终结果：factorial(${currentN}) = <strong>${details}</strong></li>`;
+                    html += '<li>所有套娃都已合上，结果已传递回最外层</li>';
+                    html += '<li>调用栈已清空，所有临时状态已释放</li>';
+                    html += '</ul>';
+                    break;
+            }
+            
+            expl.innerHTML = html;
+        }
+        
+        async function animateRecursion(n) {
+            isAnimating = true;
+            animationPaused = false;
+            currentStep = 0;
+            callStack = [];
+            returnValues = [];
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('resultDisplay').style.display = 'none';
+            
+            // Step 1: Start
+            updateStep(1);
+            updateExplanation('start');
+            renderDolls(n);
+            await sleep(1500);
+            
+            if (animationPaused) return;
+            
+            // Step 2: Winding phase
+            updateStep(2);
+            updateExplanation('winding', n - 1);
+            
+            for (let i = n; i >= 1; i--) {
+                if (animationPaused) return;
+                
+                updateStack(n - i + 1, `factorial(${i})`);
+                renderDolls(n, i, false);
+                await sleep(800);
+            }
+            
+            if (animationPaused) return;
+            
+            // Step 3: Base case
+            updateStep(3);
+            updateExplanation('base');
+            renderDolls(n, 1, true);
+            await sleep(1500);
+            
+            if (animationPaused) return;
+            
+            // Calculate factorial values
+            let result = 1;
+            const results = [1];
+            for (let i = 2; i <= n; i++) {
+                result *= i;
+                results.push(result);
+            }
+            
+            // Step 4: Unwinding phase
+            updateStep(4);
+            
+            for (let i = 1; i <= n; i++) {
+                if (animationPaused) return;
+                
+                const returnValue = results[i - 1];
+                const nextValue = i < n ? results[i] : result;
+                const explanation = i === 1 
+                    ? `factorial(1) = 1，返回给 factorial(2)`
+                    : `factorial(${i}) = ${i} × ${returnValue} = ${nextValue}，返回给 factorial(${i + 1 <= n ? i + 1 : '主程序'})`;
+                
+                updateExplanation('unwinding', explanation);
+                updateStack(n - i + 1, `factorial(${i})`, true, nextValue);
+                renderDolls(n, i, i === 1);
+                
+                await sleep(1000);
+            }
+            
+            if (animationPaused) return;
+            
+            // Step 5: Complete
+            updateStep(5);
+            updateExplanation('complete', result);
+            renderDolls(n);
+            
+            document.getElementById('resultN').textContent = currentN;
+            document.getElementById('resultValue').textContent = result;
+            document.getElementById('resultDisplay').style.display = 'block';
+            
+            isAnimating = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        }
+        
+        function startAnimation() {
+            if (isAnimating) return;
+            resetAnimation();
+            animateRecursion(currentN);
+        }
+        
+        function pauseAnimation() {
+            animationPaused = true;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('startBtn').disabled = false;
+        }
+        
+        function resetAnimation() {
+            animationPaused = false;
+            isAnimating = false;
+            currentStep = 0;
+            callStack = [];
+            
+            document.getElementById('stackFrames').innerHTML = '<p style="color: #888; text-align: center;">点击"开始动画"查看调用过程</p>';
+            document.getElementById('stackDepth').textContent = '0';
+            document.getElementById('resultDisplay').style.display = 'none';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`step${i}`).classList.remove('active');
+            }
+            document.getElementById('step1').classList.add('active');
+            
+            renderDolls(currentN);
+            updateExplanation('start');
+        }
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Initialize
+        renderDolls(currentN);
+    </script>
+</body>
+</html>

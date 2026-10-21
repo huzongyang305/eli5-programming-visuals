@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5 编程基础可视化图解 - 索引</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .card-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        
+        .card h3 {
+            color: #667eea;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+        
+        .card p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .card .analogy {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-size: 0.95em;
+            color: #666;
+        }
+        
+        .card .features {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .card .feature-tag {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 40px 0;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 ELI5 编程基础可视化图解</h1>
+        <p class="subtitle">用生活类比和互动动画，让复杂概念变得简单易懂</p>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number">8</span>
+                <div class="stat-label">核心概念</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">16+</span>
+                <div class="stat-label">代码示例</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">50+</span>
+                <div class="stat-label">互动元素</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">∞</span>
+                <div class="stat-label">学习乐趣</div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <a href="01-linked-list.html" class="card">
+                <div class="card-number">1</div>
+                <h3>链表是如何工作的？</h3>
+                <p>理解动态数据结构的基础，掌握节点链接和内存分配的核心思想。</p>
+                <div class="analogy">
+                    💡 <strong>生活类比：</strong>火车车厢 - 每节车厢包含货物和下一节车厢的位置
+                </div>
+                <div class="features">
+                    <span class="feature-tag">节点插入</span>
+                    <span class="feature-tag">节点删除</span>
+                    <span class="feature-tag">遍历搜索</span>
+                    <span class="feature-tag">性能对比</span>
+                </div>
+            </a>
+            
+            <a href="02-recursion.html" class="card">
+                <div class="card-number">2</div>
+                <h3>递归是如何工作的？</h3>
+                <p>揭开函数自我调用的神秘面纱，理解递归栈和基准条件的重要性。</p>
+                <div class="analogy">
+                    💡 <strong>生活类比：</strong>俄罗斯套娃 - 打开一个娃娃发现里面还有更小的娃娃
+                </div>
+                <div class="features">
+                    <span class="feature-tag">调用栈可视化</span>
+                    <span class="feature-tag">记忆化优化</span>
+                    <span class="feature-tag">基准条件</span>
+                    <span class="feature-tag">阶乘计算</span>
+                </div>
+            </a>
+            
+            <a href="03-oop.html" class="card">
+                <div class="card-number">3</div>
+                <h3>面向对象编程是什么？</h3>
+                <p>掌握封装、继承、多态和抽象四大支柱，构建可维护的代码结构。</p>
+                <div class="analogy">
+                    💡 <strong>生活类比：</strong>汽车工厂 - 设计蓝图生产实际汽车对象
+                </div>
+                <div class="features">
+                    <span class="feature-tag">类与对象</span>
+                    <span class="feature-tag">四大支柱</span>
+                    <span class="feature-tag">继承树</span>
+                    <span class="feature-tag">多态行为</span>
+                </div>
+            </a>
+            
+            <a href="04-memory-management.html" class="card">
+                <div class="card-number">4</div>
+                <h3>内存是如何管理的？</h3>
+                <p>理解栈和堆的区别，掌握智能指针和垃圾回收的工作原理。</p>
+                <div class="analogy">
+                    💡 <strong>生活类比：</strong>图书馆书架系统 - 快速存取区 vs 主书库
+                </div>
+                <div class="features">
+                    <span class="feature-tag">栈 vs 堆</span>
+                    <span class="feature-tag">智能指针</span>
+                    <span class="feature-tag">内存泄漏</span>
+                    <span class="feature-tag">垃圾回收</span>
+                </div>
+            </a>
+            
+            <a href="05-exception-handling.html" class="card">
+                <div class="card-number">5</div>
+                <h3>异常处理是如何工作的？</h3>
+                <p>学会优雅地处理错误情况，保证程序的健壮性和可维护性。</p>
+                <div class="analogy">
+                    💡 <strong>生活类比：</strong>应急响应团队 - 火灾报警触发专业救援
+                </div>
+                <div class="features">
+                    <span class="feature-tag">try-catch-finally</span>
+                    <span class="feature-tag">异常传播</span>
+                    <span class="feature-tag">自定义异常</span>
+                    <span class="feature-tag">异常链</span>
+                </div>
+            </a>
+            
+            <a href="06-generics.html" class="card">
+                <div class="card-number">6</div>
+                <h3>泛型是什么？</h3>
+                <p>理解类型参数化的力量，编写灵活且类型安全的通用代码。</p>
+                <div class="analogy">
+                    💡 <strong>生活类比：</strong>万能食谱书 - 用占位符适应不同食材
+                </div>
+                <div class="features">
+                    <span class="feature-tag">模板实例化</span>
+                    <span class="feature-tag">类型擦除</span>
+                    <span class="feature-tag">特化</span>
+                    <span class="feature-tag">可变参数</span>
+                </div>
+            </a>
+            
+            <a href="07-hash-table.html" class="card">
+                <div class="card-number">7</div>
+                <h3>哈希表是如何工作的？</h3>
+                <p>掌握O(1)查找的魔法，理解哈希函数和冲突解决策略。</p>
+                <div class="analogy">
+                    💡 <strong>生活类比：</strong>图书馆卡片目录 - 书名映射到书架编号
+                </div>
+                <div class="features">
+                    <span class="feature-tag">哈希函数</span>
+                    <span class="feature-tag">冲突处理</span>
+                    <span class="feature-tag">负载因子</span>
+                    <span class="feature-tag">重新哈希</span>
+                </div>
+            </a>
+            
+            <a href="08-solid-principles.html" class="card">
+                <div class="card-number">8</div>
+                <h3>SOLID设计原则是什么？</h3>
+                <p>学习构建高质量软件架构的五大黄金法则。</p>
+                <div class="analogy">
+                    💡 <strong>生活类比：</strong>餐厅厨房组织 - 专业化分工提升效率
+                </div>
+                <div class="features">
+                    <span class="feature-tag">单一职责</span>
+                    <span class="feature-tag">开闭原则</span>
+                    <span class="feature-tag">里氏替换</span>
+                    <span class="feature-tag">接口隔离</span>
+                    <span class="feature-tag">依赖倒置</span>
+                </div>
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p><strong>📚 配套教程：</strong>每个可视化图解都对应教程中的一个章节</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                点击任意卡片开始探索 | 建议在现代浏览器中打开以获得最佳体验
+            </p>
+            <p style="margin-top: 15px; color: #999; font-size: 0.85em;">
+                基于 C++ 和 Java 双语言示例 · 交互式学习 · 零基础友好
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Add smooth scrolling and click tracking
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Add a subtle animation on click
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+        
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            const cards = Array.from(document.querySelectorAll('.card'));
+            const currentFocus = document.activeElement;
+            const currentIndex = cards.indexOf(currentFocus);
+            
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextIndex = (currentIndex + 1) % cards.length;
+                cards[nextIndex].focus();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevIndex = (currentIndex - 1 + cards.length) % cards.length;
+                cards[prevIndex].focus();
+            }
+        });
+    </script>
+</body>
+</html>

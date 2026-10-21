@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: 哈希表是如何工作的？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .analogy-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .analogy-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .analogy-box p {
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .visual-area {
+            margin: 40px 0;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 15px;
+            min-height: 300px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .explanation {
+            background: #fff9e6;
+            border: 2px solid #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .explanation h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .highlight {
+            background: yellow;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+        
+        .code-block .type {
+            color: #8be9fd;
+        }
+        
+        .code-block .string {
+            color: #f1fa8c;
+        }
+        
+        .code-block .comment {
+            color: #6272a4;
+        }
+        
+        .code-block .function {
+            color: #50fa7b;
+        }
+        
+        /* Hash Table Specific Styles */
+        .hash-function-demo {
+            background: #e8f4f8;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .hash-function-demo h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .input-group input {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .input-group select {
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+        
+        .hash-visualization {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hash-input {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .hash-arrow {
+            font-size: 2.5em;
+            color: #667eea;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .hash-function-box {
+            background: #ffd700;
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+        
+        .hash-result {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+        
+        .bucket-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .bucket {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 100px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .bucket.highlight-bucket {
+            border-color: #ffd700;
+            background: #fff9e6;
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.5);
+        }
+        
+        .bucket-label {
+            position: absolute;
+            top: -12px;
+            left: 10px;
+            background: #667eea;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .bucket-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .bucket-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .bucket-item .key {
+            font-weight: bold;
+        }
+        
+        .bucket-item .value {
+            opacity: 0.9;
+            font-size: 0.85em;
+        }
+        
+        .collision-indicator {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .load-factor-display {
+            background: #e8f4f8;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .load-factor-bar {
+            height: 30px;
+            background: #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .load-factor-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .load-factor-fill.warning {
+            background: linear-gradient(90deg, #ffd700 0%, #ff6b6b 100%);
+        }
+        
+        .load-factor-fill.danger {
+            background: linear-gradient(90deg, #ff6b6b 0%, #ff0000 100%);
+        }
+        
+        .threshold-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ff0000;
+            z-index: 10;
+        }
+        
+        .slider-container {
+            margin: 15px 0;
+        }
+        
+        .slider-container label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        
+        .slider-container input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        
+        .strategy-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .strategy-card {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .strategy-card h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .strategy-card.good {
+            border-color: #50fa7b;
+            background: #f0fff4;
+        }
+        
+        .strategy-card.bad {
+            border-color: #ff6b6b;
+            background: #fff0f0;
+        }
+        
+        .hash-quality-demo {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .quality-visual {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .distribution-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .distribution-cell {
+            aspect-ratio: 1;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .performance-chart {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            margin: 20px 0;
+            padding: 0 20px;
+        }
+        
+        .chart-bar {
+            width: 60px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: height 0.5s ease;
+        }
+        
+        .chart-bar.slow {
+            background: linear-gradient(180deg, #ff6b6b 0%, #ff0000 100%);
+        }
+        
+        .chart-label {
+            text-align: center;
+            margin-top: 10px;
+            color: #555;
+            font-size: 0.9em;
+        }
+        
+        .application-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .application-card {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .application-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .application-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .application-card p {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .pitfall-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .pitfall-list li {
+            background: white;
+            border-left: 4px solid #ff6b6b;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 0 10px 10px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .pitfall-icon {
+            font-size: 1.5em;
+            flex-shrink: 0;
+        }
+        
+        .pitfall-content h4 {
+            color: #ff6b6b;
+            margin-bottom: 5px;
+        }
+        
+        .pitfall-content p {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .rehash-animation {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .rehash-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+            animation: rehashSweep 2s infinite;
+        }
+        
+        @keyframes rehashSweep {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .step.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            animation: bounce 0.5s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        @media (max-width: 768px) {
+            .strategy-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .hash-quality-demo {
+                flex-direction: column;
+            }
+            
+            .bucket-container {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 ELI5: 哈希表是如何工作的？</h1>
+        <p class="subtitle">图书馆卡片目录系统的魔法</p>
+        
+        <div class="analogy-box">
+            <h3>💡 生活类比：图书馆卡片目录</h3>
+            <p>想象一个大型图书馆：</p>
+            <ul style="margin-left: 20px; margin-top: 10px; color: #555;">
+                <li><strong>书名或作者名</strong> = 键（Key）</li>
+                <li><strong>目录编号系统</strong> = 哈希函数（将书名转换为书架号）</li>
+                <li><strong>物理书架</strong> = 桶（Buckets），存储实际书籍的位置</li>
+                <li><strong>碰撞</strong> = 两本书被分配到同一个书架（通过链式法或开放寻址处理）</li>
+            </ul>
+            <p style="margin-top: 10px;"><strong>关键特点：</strong>不需要遍历所有书架！通过目录编号直接找到目标位置，平均只需 O(1) 时间。</p>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎮 交互式演示：构建你的哈希表</h3>
+            
+            <div class="step-indicator">
+                <div class="step active" id="step1">1</div>
+                <div class="step" id="step2">2</div>
+                <div class="step" id="step3">3</div>
+                <div class="step" id="step4">4</div>
+            </div>
+            
+            <div class="hash-function-demo">
+                <h4>🔢 哈希函数可视化</h4>
+                <div class="input-group">
+                    <input type="text" id="keyInput" placeholder="输入键（如：Book A）" />
+                    <input type="text" id="valueInput" placeholder="输入值（如：第3排）" />
+                    <select id="hashFunctionSelect">
+                        <option value="simple">简单取模</option>
+                        <option value="better" selected>更好分布</option>
+                        <option value="bad">糟糕哈希</option>
+                    </select>
+                    <button onclick="insertEntry()">➕ 插入</button>
+                </div>
+                
+                <div id="hashVisualization" class="hash-visualization" style="display: none;">
+                    <div class="hash-input" id="hashInputDisplay"></div>
+                    <div class="hash-arrow">→</div>
+                    <div class="hash-function-box" id="hashFunctionDisplay"></div>
+                    <div class="hash-arrow">→</div>
+                    <div class="hash-result" id="hashResultDisplay"></div>
+                </div>
+                
+                <div id="collisionWarning" class="collision-indicator" style="display: none;">
+                    ⚠️ 碰撞检测！多个键映射到同一位置
+                </div>
+            </div>
+            
+            <div class="load-factor-display">
+                <h4 style="color: #667eea; margin-bottom: 10px;">📊 负载因子监控</h4>
+                <div class="load-factor-bar">
+                    <div class="load-factor-fill" id="loadFactorFill" style="width: 0%;">0%</div>
+                    <div class="threshold-line" id="thresholdLine" style="left: 75%;"></div>
+                </div>
+                <div class="slider-container">
+                    <label>重新哈希阈值：<span id="thresholdValue">75</span>%</label>
+                    <input type="range" id="thresholdSlider" min="50" max="90" value="75" oninput="updateThreshold(this.value)" />
+                </div>
+                <button onclick="triggerRehash()" id="rehashBtn" disabled>🔄 触发重新哈希</button>
+            </div>
+            
+            <div id="bucketContainer" class="bucket-container">
+                <!-- 动态生成 -->
+            </div>
+            
+            <div class="controls">
+                <button onclick="searchEntry()">🔍 查找</button>
+                <button onclick="deleteEntry()">🗑️ 删除</button>
+                <button onclick="clearTable()">🔄 清空</button>
+                <button onclick="showCollisionStrategy()">⚡ 碰撞策略对比</button>
+            </div>
+            
+            <div class="explanation" id="explanation">
+                <h4>📖 当前状态说明</h4>
+                <p>输入键值对开始构建哈希表！观察哈希函数如何将键转换为桶索引。</p>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚡ 碰撞处理策略对比</h3>
+            
+            <div class="strategy-comparison">
+                <div class="strategy-card">
+                    <h4>🔗 链式法（Chaining）</h4>
+                    <p style="color: #555; margin-bottom: 15px;">每个桶包含一个链表，碰撞的键值对追加到链表末尾</p>
+                    <div style="background: #f0f4ff; padding: 15px; border-radius: 10px;">
+                        <div style="font-weight: bold; color: #667eea; margin-bottom: 10px;">优点：</div>
+                        <ul style="margin-left: 20px; color: #555;">
+                            <li>实现简单直观</li>
+                            <li>不受负载因子限制</li>
+                            <li>删除操作容易</li>
+                        </ul>
+                    </div>
+                    <div style="background: #fff0f0; padding: 15px; border-radius: 10px; margin-top: 10px;">
+                        <div style="font-weight: bold; color: #ff6b6b; margin-bottom: 10px;">缺点：</div>
+                        <ul style="margin-left: 20px; color: #555;">
+                            <li>额外内存开销（指针）</li>
+                            <li>缓存不友好</li>
+                            <li>最坏情况退化为链表 O(n)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="strategy-card">
+                    <h4>🔍 开放寻址（Open Addressing）</h4>
+                    <p style="color: #555; margin-bottom: 15px;">碰撞时探测下一个空位（线性探测、二次探测、双重哈希）</p>
+                    <div style="background: #f0f4ff; padding: 15px; border-radius: 10px;">
+                        <div style="font-weight: bold; color: #667eea; margin-bottom: 10px;">优点：</div>
+                        <ul style="margin-left: 20px; color: #555;">
+                            <li>无额外指针开销</li>
+                            <li>缓存友好</li>
+                            <li>实现紧凑</li>
+                        </ul>
+                    </div>
+                    <div style="background: #fff0f0; padding: 15px; border-radius: 10px; margin-top: 10px;">
+                        <div style="font-weight: bold; color: #ff6b6b; margin-bottom: 10px;">缺点：</div>
+                        <ul style="margin-left: 20px; color: #555;">
+                            <li>负载因子必须 < 1</li>
+                            <li>删除复杂（需要标记）</li>
+                            <li>聚集问题（Clustering）</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">📈 哈希函数质量对比</h3>
+            
+            <div class="hash-quality-demo">
+                <div class="quality-visual good">
+                    <h4 style="color: #50fa7b; text-align: center;">✅ 好的哈希函数</h4>
+                    <p style="color: #555; text-align: center; margin-bottom: 10px;">均匀分布，最小化碰撞</p>
+                    <div class="distribution-grid" id="goodDistribution"></div>
+                </div>
+                
+                <div class="quality-visual bad">
+                    <h4 style="color: #ff6b6b; text-align: center;">❌ 糟糕的哈希函数</h4>
+                    <p style="color: #555; text-align: center; margin-bottom: 10px;">聚集严重，大量碰撞</p>
+                    <div class="distribution-grid" id="badDistribution"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⏱️ 性能分析</h3>
+            
+            <div class="performance-chart">
+                <h4 style="color: #667eea; margin-bottom: 15px;">平均情况 vs 最坏情况</h4>
+                <div class="chart-bars">
+                    <div>
+                        <div class="chart-bar" style="height: 30px;">O(1)</div>
+                        <div class="chart-label">插入<br/>（平均）</div>
+                    </div>
+                    <div>
+                        <div class="chart-bar" style="height: 30px;">O(1)</div>
+                        <div class="chart-label">查找<br/>（平均）</div>
+                    </div>
+                    <div>
+                        <div class="chart-bar" style="height: 30px;">O(1)</div>
+                        <div class="chart-label">删除<br/>（平均）</div>
+                    </div>
+                    <div>
+                        <div class="chart-bar slow" style="height: 150px;">O(n)</div>
+                        <div class="chart-label">插入<br/>（最坏）</div>
+                    </div>
+                    <div>
+                        <div class="chart-bar slow" style="height: 150px;">O(n)</div>
+                        <div class="chart-label">查找<br/>（最坏）</div>
+                    </div>
+                    <div>
+                        <div class="chart-bar slow" style="height: 150px;">O(n)</div>
+                        <div class="chart-label">删除<br/>（最坏）</div>
+                    </div>
+                </div>
+                <p style="text-align: center; color: #555; margin-top: 20px;">
+                    <strong>最坏情况发生条件：</strong>所有键都哈希到同一个桶（糟糕的哈希函数或恶意攻击）
+                </p>
+            </div>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>数据结构</th>
+                        <th>插入</th>
+                        <th>查找</th>
+                        <th>删除</th>
+                        <th>有序性</th>
+                        <th>适用场景</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>哈希表</strong></td>
+                        <td>⭐ O(1) 平均</td>
+                        <td>⭐ O(1) 平均</td>
+                        <td>⭐ O(1) 平均</td>
+                        <td>❌ 无序</td>
+                        <td>快速查找、去重、缓存</td>
+                    </tr>
+                    <tr>
+                        <td><strong>平衡二叉搜索树</strong></td>
+                        <td>O(log n)</td>
+                        <td>O(log n)</td>
+                        <td>O(log n)</td>
+                        <td>✅ 有序</td>
+                        <td>范围查询、有序遍历</td>
+                    </tr>
+                    <tr>
+                        <td><strong>数组</strong></td>
+                        <td>O(n)</td>
+                        <td>O(n) 未排序<br/>O(log n) 已排序</td>
+                        <td>O(n)</td>
+                        <td>✅ 可排序</td>
+                        <td>随机访问、数据量小</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🌍 真实世界应用</h3>
+            
+            <div class="application-grid">
+                <div class="application-card">
+                    <h4>🗄️ 数据库索引</h4>
+                    <p>使用哈希索引加速精确匹配查询。例如：通过用户ID快速查找用户记录，无需全表扫描。</p>
+                </div>
+                
+                <div class="application-card">
+                    <h4>💾 缓存系统</h4>
+                    <p>Redis、Memcached等缓存系统使用哈希表存储键值对，实现O(1)时间的数据检索。</p>
+                </div>
+                
+                <div class="application-card">
+                    <h4>🔧 编译器符号表</h4>
+                    <p>编译器使用哈希表存储变量名、函数名到其类型和内存地址的映射，加速名称解析。</p>
+                </div>
+                
+                <div class="application-card">
+                    <h4>🔍 去重检测</h4>
+                    <p>利用哈希表的唯一键特性，快速检测和去除重复元素。例如：HashSet用于去重。</p>
+                </div>
+                
+                <div class="application-card">
+                    <h4>🔐 密码学</h4>
+                    <p>哈希函数用于密码存储（加盐哈希）、数字签名和数据完整性验证（SHA系列算法）。</p>
+                </div>
+                
+                <div class="application-card">
+                    <h4>🌐 路由表</h4>
+                    <p>网络路由器使用哈希表存储IP前缀到下一跳的映射，实现快速数据包转发。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">💻 代码实现</h3>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">C++ unordered_map 自定义哈希函数</h4>
+            <div class="code-block">
+<span class="keyword">#include</span> <span class="string">&lt;unordered_map&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;string&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;functional&gt;</span>
+
+<span class="comment">// 自定义字符串哈希函数</span>
+<span class="keyword">struct</span> <span class="type">CustomStringHash</span> {
+    <span class="type">size_t</span> <span class="function">operator()</span>(<span class="keyword">const</span> std::string& key) <span class="keyword">const</span> {
+        <span class="type">size_t</span> hash = <span class="number">0</span>;
+        <span class="keyword">for</span> (<span class="type">char</span> c : key) {
+            hash = hash * <span class="number">31</span> + c;  <span class="comment">// 类似Java的hashCode</span>
+        }
+        <span class="keyword">return</span> hash;
+    }
+};
+
+<span class="comment">// 使用自定义哈希的unordered_map</span>
+std::unordered_map&lt;std::string, <span class="type">int</span>, CustomStringHash> bookCatalog;
+
+<span class="comment">// 插入书籍</span>
+bookCatalog[<span class="string">"Harry Potter"</span>] = <span class="number">3</span>;      <span class="comment">// 第3排书架</span>
+bookCatalog[<span class="string">"Lord of the Rings"</span>] = <span class="number">7</span>; <span class="comment">// 第7排书架</span>
+
+<span class="comment">// 查找书籍位置 - 平均O(1)</span>
+<span class="keyword">auto</span> it = bookCatalog.find(<span class="string">"Harry Potter"</span>);
+<span class="keyword">if</span> (it != bookCatalog.end()) {
+    std::cout << <span class="string">"Found at shelf: "</span> << it->second << std::endl;
+}
+
+<span class="comment">// 碰撞处理：unordered_map内部使用链式法</span>
+<span class="comment">// 当多个键哈希到同一桶时，形成链表</span>
+            </div>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">Java HashMap 内部结构</h4>
+            <div class="code-block">
+<span class="keyword">import</span> java.util.HashMap;
+<span class="keyword">import</span> java.util.Objects;
+
+<span class="comment">// 自定义键类：必须同时重写equals()和hashCode()</span>
+<span class="keyword">class</span> <span class="type">Book</span> {
+    String title;
+    String author;
+    
+    Book(String title, String author) {
+        <span class="keyword">this</span>.title = title;
+        <span class="keyword">this</span>.author = author;
+    }
+    
+    <span class="comment">// hashCode(): 决定对象存储在哪个桶</span>
+    <span class="keyword">@Override</span>
+    <span class="keyword">public int</span> <span class="function">hashCode</span>() {
+        <span class="keyword">return</span> Objects.hash(title, author);
+    }
+    
+    <span class="comment">// equals(): 解决哈希冲突时的键比较</span>
+    <span class="comment">// 重要契约：如果equals返回true，hashCode必须相同</span>
+    <span class="keyword">@Override</span>
+    <span class="keyword">public boolean</span> <span class="function">equals</span>(Object obj) {
+        <span class="keyword">if</span> (<span class="keyword">this</span> == obj) <span class="keyword">return true</span>;
+        <span class="keyword">if</span> (obj == <span class="keyword">null</span> || getClass() != obj.getClass()) <span class="keyword">return false</span>;
+        Book other = (Book) obj;
+        <span class="keyword">return</span> Objects.equals(title, other.title) && 
+               Objects.equals(author, other.author);
+    }
+}
+
+<span class="comment">// 使用HashMap</span>
+HashMap&lt;Book, Integer&gt; catalog = <span class="keyword">new</span> HashMap&lt;&gt;();
+catalog.put(<span class="keyword">new</span> Book(<span class="string">"Harry Potter"</span>, <span class="string">"J.K. Rowling"</span>), <span class="number">3</span>);
+
+<span class="comment">// Java 8+优化：桶内链表长度超过8时转为红黑树</span>
+<span class="comment">// 保证最坏情况从O(n)改善为O(log n)</span>
+            </div>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">链式法碰撞处理示例</h4>
+            <div class="code-block">
+<span class="keyword">class</span> <span class="type">HashTable</span>&lt;K, V&gt; {
+    <span class="keyword">private static final int</span> INITIAL_CAPACITY = <span class="number">16</span>;
+    <span class="keyword">private</span> Node&lt;K, V&gt;[] buckets;
+    <span class="keyword">private int</span> size;
+    
+    <span class="keyword">static class</span> <span class="type">Node</span>&lt;K, V&gt; {
+        K key;
+        V value;
+        Node&lt;K, V&gt; next;  <span class="comment">// 链表指针</span>
+        
+        Node(K key, V value) {
+            <span class="keyword">this</span>.key = key;
+            <span class="keyword">this</span>.value = value;
+            <span class="keyword">this</span>.next = <span class="keyword">null</span>;
+        }
+    }
+    
+    <span class="keyword">public void</span> <span class="function">put</span>(K key, V value) {
+        <span class="type">int</span> index = hash(key) % buckets.length;
+        Node&lt;K, V&gt; newNode = <span class="keyword">new</span> Node&lt;&gt;(key, value);
+        
+        <span class="comment">// 头插法：新节点插入链表头部 - O(1)</span>
+        newNode.next = buckets[index];
+        buckets[index] = newNode;
+        size++;
+        
+        <span class="comment">// 检查负载因子，必要时扩容</span>
+        <span class="keyword">if</span> ((<span class="type">double</span>) size / buckets.length > <span class="number">0.75</span>) {
+            resize(buckets.length * <span class="number">2</span>);
+        }
+    }
+    
+    <span class="keyword">public</span> V <span class="function">get</span>(K key) {
+        <span class="type">int</span> index = hash(key) % buckets.length;
+        Node&lt;K, V&gt; current = buckets[index];
+        
+        <span class="comment">// 遍历链表查找 - 平均O(1)，最坏O(n)</span>
+        <span class="keyword">while</span> (current != <span class="keyword">null</span>) {
+            <span class="keyword">if</span> (current.key.equals(key)) {
+                <span class="keyword">return</span> current.value;
+            }
+            current = current.next;
+        }
+        <span class="keyword">return null</span>;
+    }
+    
+    <span class="keyword">private void</span> <span class="function">resize</span>(<span class="type">int</span> newCapacity) {
+        Node&lt;K, V&gt;[] oldBuckets = buckets;
+        buckets = <span class="keyword">new</span> Node[newCapacity];
+        size = <span class="number">0</span>;
+        
+        <span class="comment">// 重新哈希所有元素到新桶数组</span>
+        <span class="keyword">for</span> (Node&lt;K, V&gt; node : oldBuckets) {
+            <span class="keyword">while</span> (node != <span class="keyword">null</span>) {
+                put(node.key, node.value);
+                node = node.next;
+            }
+        }
+    }
+}
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚠️ 常见陷阱与最佳实践</h3>
+            
+            <ul class="pitfall-list">
+                <li>
+                    <div class="pitfall-icon">🔴</div>
+                    <div class="pitfall-content">
+                        <h4>糟糕的哈希函数导致聚集</h4>
+                        <p>如果哈希函数不能均匀分布键，会导致某些桶过载，性能退化为O(n)。避免使用简单的取模运算处理非均匀分布的数据。</p>
+                    </div>
+                </li>
+                
+                <li>
+                    <div class="pitfall-icon">🔴</div>
+                    <div class="pitfall-content">
+                        <h4>忘记同时重写equals()和hashCode()</h4>
+                        <p>在Java中，如果只重写其中一个方法，会导致HashMap行为异常。契约要求：相等的对象必须有相同的hashCode。</p>
+                    </div>
+                </li>
+                
+                <li>
+                    <div class="pitfall-icon">🔴</div>
+                    <div class="pitfall-content">
+                        <h4>使用可变对象作为键</h4>
+                        <p>如果键对象在存入哈希表后被修改（改变了影响hashCode的字段），将无法再找到该键。始终使用不可变对象作为键。</p>
+                    </div>
+                </li>
+                
+                <li>
+                    <div class="pitfall-icon">🔴</div>
+                    <div class="pitfall-content">
+                        <h4>忽略线程安全问题</h4>
+                        <p>HashMap不是线程安全的。多线程环境下应使用ConcurrentHashMap或Collections.synchronizedMap()进行同步保护。</p>
+                    </div>
+                </li>
+                
+                <li>
+                    <div class="pitfall-icon">🟡</div>
+                    <div class="pitfall-content">
+                        <h4>初始容量设置不当</h4>
+                        <p>如果预知数据量，应设置合适的初始容量避免频繁扩容。但也不要过度分配造成内存浪费。</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="explanation" style="background: #e6f3ff; border-color: #667eea;">
+            <h4 style="color: #667eea;">🎯 核心要点总结</h4>
+            <ul>
+                <li><strong>哈希表的本质</strong>：通过哈希函数将键映射到数组索引，实现快速查找</li>
+                <li><strong>优点</strong>：平均O(1)的插入/查找/删除，实现简单，应用广泛</li>
+                <li><strong>缺点</strong>：最坏情况O(n)，不支持有序操作，内存开销较大</li>
+                <li><strong>关键因素</strong>：好的哈希函数、合适的负载因子、有效的碰撞处理</li>
+                <li><strong>适用场景</strong>：快速查找、去重、缓存、计数、数据库索引</li>
+                <li><strong>不适用场景</strong>：需要范围查询、有序遍历、内存极度受限</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // 哈希表状态
+        let hashTable = {};
+        let bucketCount = 8;
+        let loadFactorThreshold = 0.75;
+        let entryCount = 0;
+        let currentStep = 1;
+        
+        // 初始化桶容器
+        function initializeBuckets() {
+            const container = document.getElementById('bucketContainer');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < bucketCount; i++) {
+                const bucket = document.createElement('div');
+                bucket.className = 'bucket';
+                bucket.id = `bucket-${i}`;
+                bucket.innerHTML = `
+                    <div class="bucket-label">桶 ${i}</div>
+                    <div class="bucket-items" id="bucket-items-${i}"></div>
+                `;
+                container.appendChild(bucket);
+            }
+        }
+        
+        // 哈希函数实现
+        function simpleHash(key) {
+            let hash = 0;
+            for (let i = 0; i < key.length; i++) {
+                hash += key.charCodeAt(i);
+            }
+            return hash % bucketCount;
+        }
+        
+        function betterHash(key) {
+            let hash = 0;
+            for (let i = 0; i < key.length; i++) {
+                hash = ((hash << 5) - hash) + key.charCodeAt(i);
+                hash = hash & hash; // 转换为32位整数
+            }
+            return Math.abs(hash) % bucketCount;
+        }
+        
+        function badHash(key) {
+            // 糟糕的哈希：总是返回相同或相近的值
+            return key.length % bucketCount;
+        }
+        
+        function getHashFunction() {
+            const select = document.getElementById('hashFunctionSelect');
+            switch(select.value) {
+                case 'simple': return simpleHash;
+                case 'better': return betterHash;
+                case 'bad': return badHash;
+                default: return betterHash;
+            }
+        }
+        
+        function getHashFunctionName() {
+            const select = document.getElementById('hashFunctionSelect');
+            switch(select.value) {
+                case 'simple': return '简单求和取模';
+                case 'better': return '位移混合';
+                case 'bad': return '仅用长度';
+                default: return '未知';
+            }
+        }
+        
+        // 插入条目
+        function insertEntry() {
+            const keyInput = document.getElementById('keyInput');
+            const valueInput = document.getElementById('valueInput');
+            const key = keyInput.value.trim();
+            const value = valueInput.value.trim();
+            
+            if (!key || !value) {
+                alert('请输入键和值！');
+                return;
+            }
+            
+            const hashFunc = getHashFunction();
+            const index = hashFunc(key);
+            
+            // 显示哈希过程
+            showHashVisualization(key, index);
+            
+            // 检查碰撞
+            const hasCollision = hashTable[index] && hashTable[index].some(entry => entry.key === key);
+            const isNewBucket = !hashTable[index] || hashTable[index].length === 0;
+            
+            if (!hashTable[index]) {
+                hashTable[index] = [];
+            }
+            
+            // 更新现有键或添加新条目
+            const existingIndex = hashTable[index].findIndex(entry => entry.key === key);
+            if (existingIndex >= 0) {
+                hashTable[index][existingIndex].value = value;
+            } else {
+                hashTable[index].push({ key, value });
+                entryCount++;
+            }
+            
+            // 显示碰撞警告
+            if (!isNewBucket && existingIndex < 0) {
+                document.getElementById('collisionWarning').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('collisionWarning').style.display = 'none';
+                }, 2000);
+            }
+            
+            // 更新桶显示
+            renderBuckets();
+            updateLoadFactor();
+            updateStep(2);
+            updateExplanation('insert', key, value, index);
+            
+            // 清空输入
+            keyInput.value = '';
+            valueInput.value = '';
+        }
+        
+        // 显示哈希可视化
+        function showHashVisualization(key, index) {
+            const viz = document.getElementById('hashVisualization');
+            const inputDisplay = document.getElementById('hashInputDisplay');
+            const funcDisplay = document.getElementById('hashFunctionDisplay');
+            const resultDisplay = document.getElementById('hashResultDisplay');
+            
+            inputDisplay.textContent = `"${key}"`;
+            funcDisplay.textContent = getHashFunctionName();
+            resultDisplay.textContent = `桶 ${index}`;
+            
+            viz.style.display = 'flex';
+        }
+        
+        // 渲染所有桶
+        function renderBuckets() {
+            for (let i = 0; i < bucketCount; i++) {
+                const itemsContainer = document.getElementById(`bucket-items-${i}`);
+                itemsContainer.innerHTML = '';
+                
+                if (hashTable[i]) {
+                    hashTable[i].forEach(entry => {
+                        const item = document.createElement('div');
+                        item.className = 'bucket-item';
+                        item.innerHTML = `
+                            <span class="key">${entry.key}</span>
+                            <span class="value">→ ${entry.value}</span>
+                        `;
+                        itemsContainer.appendChild(item);
+                    });
+                }
+            }
+        }
+        
+        // 高亮特定桶
+        function highlightBucket(index) {
+            // 清除之前的高亮
+            document.querySelectorAll('.bucket').forEach(b => {
+                b.classList.remove('highlight-bucket');
+            });
+            
+            // 高亮目标桶
+            const bucket = document.getElementById(`bucket-${index}`);
+            if (bucket) {
+                bucket.classList.add('highlight-bucket');
+                setTimeout(() => {
+                    bucket.classList.remove('highlight-bucket');
+                }, 2000);
+            }
+        }
+        
+        // 查找条目
+        function searchEntry() {
+            const key = prompt('输入要查找的键：');
+            if (!key) return;
+            
+            const hashFunc = getHashFunction();
+            const index = hashFunc(key);
+            
+            showHashVisualization(key, index);
+            highlightBucket(index);
+            
+            let found = false;
+            if (hashTable[index]) {
+                const entry = hashTable[index].find(e => e.key === key);
+                if (entry) {
+                    found = true;
+                    updateExplanation('search', key, entry.value, index, true);
+                }
+            }
+            
+            if (!found) {
+                updateExplanation('search', key, null, index, false);
+            }
+            
+            updateStep(3);
+        }
+        
+        // 删除条目
+        function deleteEntry() {
+            const key = prompt('输入要删除的键：');
+            if (!key) return;
+            
+            const hashFunc = getHashFunction();
+            const index = hashFunc(key);
+            
+            showHashVisualization(key, index);
+            highlightBucket(index);
+            
+            let deleted = false;
+            if (hashTable[index]) {
+                const idx = hashTable[index].findIndex(e => e.key === key);
+                if (idx >= 0) {
+                    hashTable[index].splice(idx, 1);
+                    entryCount--;
+                    deleted = true;
+                    
+                    if (hashTable[index].length === 0) {
+                        delete hashTable[index];
+                    }
+                }
+            }
+            
+            renderBuckets();
+            updateLoadFactor();
+            updateExplanation('delete', key, null, index, deleted);
+            updateStep(4);
+        }
+        
+        // 清空哈希表
+        function clearTable() {
+            hashTable = {};
+            entryCount = 0;
+            renderBuckets();
+            updateLoadFactor();
+            updateStep(1);
+            updateExplanation('clear');
+        }
+        
+        // 更新负载因子显示
+        function updateLoadFactor() {
+            const loadFactor = entryCount / bucketCount;
+            const percentage = Math.min(loadFactor * 100, 100);
+            
+            const fill = document.getElementById('loadFactorFill');
+            fill.style.width = `${percentage}%`;
+            fill.textContent = `${percentage.toFixed(1)}%`;
+            
+            // 更新颜色
+            fill.classList.remove('warning', 'danger');
+            if (loadFactor > loadFactorThreshold) {
+                fill.classList.add('danger');
+                document.getElementById('rehashBtn').disabled = false;
+            } else if (loadFactor > loadFactorThreshold * 0.8) {
+                fill.classList.add('warning');
+                document.getElementById('rehashBtn').disabled = false;
+            } else {
+                document.getElementById('rehashBtn').disabled = true;
+            }
+        }
+        
+        // 更新阈值
+        function updateThreshold(value) {
+            loadFactorThreshold = value / 100;
+            document.getElementById('thresholdValue').textContent = value;
+            document.getElementById('thresholdLine').style.left = `${value}%`;
+            updateLoadFactor();
+        }
+        
+        // 触发重新哈希
+        function triggerRehash() {
+            const oldBuckets = bucketCount;
+            bucketCount *= 2;
+            
+            // 重新哈希所有条目
+            const oldHashTable = hashTable;
+            hashTable = {};
+            entryCount = 0;
+            
+            for (let i in oldHashTable) {
+                oldHashTable[i].forEach(entry => {
+                    const hashFunc = getHashFunction();
+                    const newIndex = hashFunc(entry.key);
+                    
+                    if (!hashTable[newIndex]) {
+                        hashTable[newIndex] = [];
+                    }
+                    hashTable[newIndex].push(entry);
+                    entryCount++;
+                });
+            }
+            
+            // 重新初始化桶并渲染
+            initializeBuckets();
+            renderBuckets();
+            updateLoadFactor();
+            
+            updateExplanation('rehash', oldBuckets, bucketCount);
+            
+            // 添加动画效果
+            document.getElementById('bucketContainer').classList.add('rehash-animation');
+            setTimeout(() => {
+                document.getElementById('bucketContainer').classList.remove('rehash-animation');
+            }, 2000);
+        }
+        
+        // 显示碰撞策略对比
+        function showCollisionStrategy() {
+            updateExplanation('strategy');
+        }
+        
+        // 更新步骤指示器
+        function updateStep(stepNum) {
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`step${i}`).classList.remove('active');
+            }
+            if (stepNum > 0 && stepNum <= 4) {
+                document.getElementById(`step${stepNum}`).classList.add('active');
+            }
+        }
+        
+        // 更新说明文本
+        function updateExplanation(action, param1 = null, param2 = null, param3 = null, param4 = null) {
+            const expl = document.getElementById('explanation');
+            let html = '<h4>📖 当前状态说明</h4>';
+            
+            switch(action) {
+                case 'insert':
+                    html += `<p>✅ 插入键值对 <strong>"${param1}" → "${param2}"</strong></p>`;
+                    html += '<ul>';
+                    html += `<li>1️⃣ 计算哈希值：hash("${param1}") = ${param3}</li>`;
+                    html += `<li>2️⃣ 定位到桶 ${param3}</li>`;
+                    if (param4) {
+                        html += '<li>3️⃣ 发现碰撞！使用链式法追加到链表</li>';
+                    } else {
+                        html += '<li>3️⃣ 桶为空，直接插入</li>';
+                    }
+                    html += '<li><strong>时间复杂度：O(1)</strong> 平均情况</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'search':
+                    if (param4) {
+                        html += `<p>🔍 找到键 <strong>"${param1}"</strong>，值为 "${param2}"</p>`;
+                    } else {
+                        html += `<p>❌ 未找到键 <strong>"${param1}"</strong></p>`;
+                    }
+                    html += '<ul>';
+                    html += `<li>1️⃣ 计算哈希值：hash("${param1}") = ${param3}</li>`;
+                    html += `<li>2️⃣ 定位到桶 ${param3}</li>`;
+                    html += '<li>3️⃣ 遍历桶内链表查找匹配的键</li>';
+                    html += '<li><strong>时间复杂度：O(1)</strong> 平均，O(n) 最坏</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'delete':
+                    if (param4) {
+                        html += `<p>🗑️ 成功删除键 <strong>"${param1}"</strong></p>`;
+                    } else {
+                        html += `<p>❌ 键 <strong>"${param1}"</strong> 不存在</p>`;
+                    }
+                    html += '<ul>';
+                    html += `<li>1️⃣ 计算哈希值定位桶 ${param3}</li>`;
+                    html += '<li>2️⃣ 在链表中找到并移除节点</li>';
+                    html += '<li>3️⃣ 重新链接前后节点</li>';
+                    html += '<li><strong>时间复杂度：O(1)</strong> 平均情况</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'clear':
+                    html += '<p>🔄 哈希表已清空</p>';
+                    break;
+                    
+                case 'rehash':
+                    html += `<p>🔄 重新哈希完成！桶数量从 <strong>${param1}</strong> 扩展到 <strong>${param2}</strong></p>`;
+                    html += '<ul>';
+                    html += '<li>1️⃣ 创建新的更大的桶数组</li>';
+                    html += '<li>2️⃣ 重新计算所有键的哈希值</li>';
+                    html += '<li>3️⃣ 将所有条目迁移到新桶</li>';
+                    html += '<li><strong>时间复杂度：O(n)</strong> - 需要重新处理所有元素</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'strategy':
+                    html += '<p>⚡ 碰撞处理策略对比</p>';
+                    html += '<ul>';
+                    html += '<li><strong>链式法</strong>：每个桶维护一个链表，碰撞时追加到链表。优点是实现简单，缺点是额外内存开销。</li>';
+                    html += '<li><strong>开放寻址</strong>：碰撞时探测下一个空位。优点是缓存友好，缺点是负载因子受限且删除复杂。</li>';
+                    html += '<li>Java HashMap使用链式法，Python dict使用开放寻址。</li>';
+                    html += '</ul>';
+                    break;
+            }
+            
+            expl.innerHTML = html;
+        }
+        
+        // 生成哈希分布可视化
+        function generateDistributionVisuals() {
+            const goodGrid = document.getElementById('goodDistribution');
+            const badGrid = document.getElementById('badDistribution');
+            
+            // 好的分布：均匀
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'distribution-cell';
+                const count = Math.floor(Math.random() * 3) + 1;
+                cell.style.background = `rgba(102, 126, 234, ${count * 0.3})`;
+                cell.textContent = count;
+                goodGrid.appendChild(cell);
+            }
+            
+            // 糟糕的分布：聚集
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'distribution-cell';
+                let count;
+                if (i < 5) {
+                    count = Math.floor(Math.random() * 8) + 5; // 前几个桶很多
+                } else {
+                    count = Math.floor(Math.random() * 2); // 其他桶很少
+                }
+                cell.style.background = `rgba(255, 107, 107, ${Math.min(count * 0.15, 1)})`;
+                cell.textContent = count;
+                badGrid.appendChild(cell);
+            }
+        }
+        
+        // 初始化
+        initializeBuckets();
+        generateDistributionVisuals();
+        updateLoadFactor();
+    </script>
+</body>
+</html>

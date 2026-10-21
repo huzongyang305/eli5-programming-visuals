@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: 异常处理是如何工作的？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .analogy-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .analogy-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .analogy-box p {
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .visual-area {
+            margin: 40px 0;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 15px;
+            min-height: 300px;
+        }
+        
+        .building-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(to bottom, #e8f4f8 0%, #d4e8f0 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .floor {
+            position: absolute;
+            width: 90%;
+            left: 5%;
+            height: 120px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 10px;
+        }
+        
+        .floor-3 { top: 20px; background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); }
+        .floor-2 { top: 160px; background: linear-gradient(135deg, #f0f8ff 0%, #e0f0ff 100%); }
+        .floor-1 { top: 300px; background: linear-gradient(135deg, #f5fff5 0%, #e8ffe8 100%); }
+        
+        .room {
+            width: 200px;
+            height: 100px;
+            border: 2px solid #764ba2;
+            border-radius: 8px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .room:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .room.active {
+            border-color: #ff6b6b;
+            background: #fff0f0;
+            animation: roomPulse 1s infinite;
+        }
+        
+        @keyframes roomPulse {
+            0%, 100% { box-shadow: 0 0 0 rgba(255, 107, 107, 0); }
+            50% { box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); }
+        }
+        
+        .room-label {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+        
+        .room-function {
+            font-size: 0.7em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .alarm {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            animation: alarmFlash 0.5s infinite;
+        }
+        
+        .alarm.fire { background: #ff6b6b; display: flex; }
+        .alarm.network { background: #ffa500; display: flex; }
+        .alarm.file { background: #ff8c00; display: flex; }
+        
+        @keyframes alarmFlash {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        .exception-particle {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff6b6b 0%, #cc0000 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+        }
+        
+        .catch-block {
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 250px;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        .catch-block.active {
+            display: block;
+            animation: catchAppear 0.5s ease-out;
+        }
+        
+        @keyframes catchAppear {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        .firefighter {
+            position: absolute;
+            bottom: 10px;
+            font-size: 2em;
+            display: none;
+        }
+        
+        .firefighter.active {
+            display: block;
+            animation: firefighterMove 1s ease-in-out;
+        }
+        
+        @keyframes firefighterMove {
+            0% { transform: translateX(-100px); opacity: 0; }
+            50% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        
+        .sprinkler {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 1.5em;
+            display: none;
+        }
+        
+        .sprinkler.active {
+            display: block;
+            animation: sprinklerOn 0.5s ease-out;
+        }
+        
+        @keyframes sprinklerOn {
+            from { opacity: 0; transform: scale(0); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        button.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+        
+        button.warning {
+            background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%);
+        }
+        
+        .explanation {
+            background: #fff9e6;
+            border: 2px solid #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .explanation h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .highlight {
+            background: yellow;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+        
+        .code-block .type {
+            color: #8be9fd;
+        }
+        
+        .code-block .string {
+            color: #f1fa8c;
+        }
+        
+        .code-block .comment {
+            color: #6272a4;
+        }
+        
+        .code-block .exception {
+            color: #ffb86c;
+        }
+        
+        .stack-trace {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .stack-frame {
+            padding: 8px;
+            margin: 5px 0;
+            background: #2d2d2d;
+            border-left: 3px solid #667eea;
+            border-radius: 4px;
+        }
+        
+        .stack-frame.current {
+            border-left-color: #ff6b6b;
+            background: #3d2d2d;
+            animation: frameHighlight 1s infinite;
+        }
+        
+        @keyframes frameHighlight {
+            0%, 100% { background: #3d2d2d; }
+            50% { background: #4d3d3d; }
+        }
+        
+        .exception-chain {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .chain-node {
+            padding: 15px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .chain-node::after {
+            content: '↓';
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+            color: #667eea;
+        }
+        
+        .chain-node:last-child::after {
+            display: none;
+        }
+        
+        .chain-node.caused-by {
+            border-color: #ff6b6b;
+            background: #fff5f5;
+        }
+        
+        .best-practices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .practice-card {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .practice-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .practice-card.good {
+            border-color: #4caf50;
+        }
+        
+        .practice-card.bad {
+            border-color: #f44336;
+        }
+        
+        .practice-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .practice-card.good h4 {
+            color: #4caf50;
+        }
+        
+        .practice-card.bad h4 {
+            color: #f44336;
+        }
+        
+        .toggle-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .switch.active {
+            background: #667eea;
+        }
+        
+        .switch-handle {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .switch.active .switch-handle {
+            transform: translateX(30px);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .status-indicator.handled {
+            background: #e8f5e9;
+            color: #4caf50;
+        }
+        
+        .status-indicator.unhandled {
+            background: #ffebee;
+            color: #f44336;
+        }
+        
+        .multi-catch-demo {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .catch-option {
+            flex: 1;
+            min-width: 250px;
+            padding: 20px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .catch-option:hover {
+            border-color: #667eea;
+            transform: scale(1.02);
+        }
+        
+        .catch-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .performance-meter {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .performance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50 0%, #ffeb3b 50%, #f44336 100%);
+            transition: width 0.5s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚒 ELI5: 异常处理是如何工作的？</h1>
+        <p class="subtitle">就像大楼里的应急响应团队</p>
+        
+        <div class="analogy-box">
+            <h3>💡 生活类比：大楼应急响应系统</h3>
+            <p>想象一栋办公大楼，每层楼都有不同的部门（函数）在工作：</p>
+            <ul style="margin-left: 20px; margin-top: 10px; color: #555;">
+                <li><strong>正常运营（try块）</strong>：员工在各自的办公室里正常工作</li>
+                <li><strong>触发警报（throw）</strong>：当出现问题时（火灾、漏水、断电），有人按下紧急按钮</li>
+                <li><strong>响应团队（catch）</strong>：消防员、维修工等专业人员根据警报类型进行处理</li>
+                <li><strong>清理工作（finally）</strong>：无论是否发生事故，清洁工都会确保环境安全整洁</li>
+            </ul>
+            <p style="margin-top: 10px;"><strong>关键概念：</strong>如果本楼层无法处理问题，警报会向上传播到更高层，直到找到能处理的团队！</p>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎮 交互式演示：模拟异常传播</h3>
+            
+            <div class="controls">
+                <button onclick="simulateException('divide')">➗ 模拟除零错误</button>
+                <button onclick="simulateException('file')" class="warning">📁 模拟文件未找到</button>
+                <button onclick="simulateException('network')" class="danger">🌐 模拟网络错误</button>
+                <button onclick="toggleHandling()">🔄 切换处理模式</button>
+                <button onclick="showStackTrace()">📋 显示调用栈</button>
+                <button onclick="resetSimulation()">🔄 重置</button>
+            </div>
+            
+            <div class="toggle-switch">
+                <span>当前模式：</span>
+                <div class="switch active" id="handlingSwitch" onclick="toggleHandling()">
+                    <div class="switch-handle"></div>
+                </div>
+                <span id="handlingLabel">已处理（有catch）</span>
+            </div>
+            
+            <div id="statusIndicator" class="status-indicator handled">
+                ✅ 异常将被捕获并处理
+            </div>
+            
+            <div class="building-container" id="buildingContainer">
+                <!-- 3楼 -->
+                <div class="floor floor-3">
+                    <div class="room" id="room-main" onclick="selectRoom('main')">
+                        <div class="alarm" id="alarm-main"></div>
+                        <div class="room-label">🏢 主程序</div>
+                        <div class="room-function">main()</div>
+                        <div class="sprinkler" id="sprinkler-main">💦</div>
+                    </div>
+                    <div class="catch-block" id="catch-main">
+                        <div class="firefighter" id="firefighter-main">👨‍🚒</div>
+                        <strong>通用异常处理</strong><br>
+                        <small>记录日志，通知管理员</small>
+                    </div>
+                </div>
+                
+                <!-- 2楼 -->
+                <div class="floor floor-2">
+                    <div class="room" id="room-service" onclick="selectRoom('service')">
+                        <div class="alarm" id="alarm-service"></div>
+                        <div class="room-label">⚙️ 服务层</div>
+                        <div class="room-function">processData()</div>
+                        <div class="sprinkler" id="sprinkler-service">💦</div>
+                    </div>
+                    <div class="catch-block" id="catch-service">
+                        <div class="firefighter" id="firefighter-service">👨‍🚒</div>
+                        <strong>业务异常处理</strong><br>
+                        <small>回滚事务，返回错误码</small>
+                    </div>
+                </div>
+                
+                <!-- 1楼 -->
+                <div class="floor floor-1">
+                    <div class="room" id="room-data" onclick="selectRoom('data')">
+                        <div class="alarm" id="alarm-data"></div>
+                        <div class="room-label">💾 数据层</div>
+                        <div class="room-function">readFile() / connect()</div>
+                        <div class="sprinkler" id="sprinkler-data">💦</div>
+                    </div>
+                    <div class="catch-block" id="catch-data">
+                        <div class="firefighter" id="firefighter-data">👨‍🚒</div>
+                        <strong>底层异常处理</strong><br>
+                        <small>关闭资源，抛出上层</small>
+                    </div>
+                </div>
+                
+                <!-- 异常粒子 -->
+                <div class="exception-particle" id="exceptionParticle">!</div>
+            </div>
+            
+            <div class="explanation" id="explanation">
+                <h4>📖 使用说明</h4>
+                <p>点击上方的按钮模拟不同类型的异常，观察异常如何在调用栈中传播！</p>
+                <ul>
+                    <li><strong>除零错误</strong>：数学运算异常，通常在数据层触发</li>
+                    <li><strong>文件未找到</strong>：IO异常，可能在服务层或数据层触发</li>
+                    <li><strong>网络错误</strong>：连接异常，通常从底层向上传播</li>
+                    <li><strong>切换处理模式</strong>：观察有无catch块时的不同行为</li>
+                </ul>
+            </div>
+            
+            <div id="stackTraceContainer" style="display: none;">
+                <h4 style="color: #667eea; margin: 20px 0 10px;">📋 调用栈跟踪</h4>
+                <div class="stack-trace" id="stackTrace">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🔗 异常链：因果关系可视化</h3>
+            
+            <div class="controls">
+                <button onclick="showExceptionChain()">展示异常链</button>
+                <button onclick="hideExceptionChain()">隐藏</button>
+            </div>
+            
+            <div class="exception-chain" id="exceptionChain" style="display: none;">
+                <div class="chain-node">
+                    <strong>🎯 顶层异常：ApplicationException</strong><br>
+                    <small>消息："用户数据处理失败"</small><br>
+                    <small>位置：UserController.java:45</small>
+                </div>
+                <div class="chain-node caused-by">
+                    <strong>⚠️ 原因：ServiceException</strong><br>
+                    <small>消息："数据库查询超时"</small><br>
+                    <small>位置：UserService.java:128</small>
+                </div>
+                <div class="chain-node caused-by">
+                    <strong>🔥 根本原因：SQLException</strong><br>
+                    <small>消息："Connection refused: localhost:3306"</small><br>
+                    <small>位置：DatabaseConnector.java:67</small>
+                </div>
+            </div>
+            
+            <div class="explanation">
+                <h4>💡 为什么要用异常链？</h4>
+                <ul>
+                    <li><strong>保留上下文</strong>：每一层都添加自己的信息，不丢失原始错误</li>
+                    <li><strong>便于调试</strong>：可以看到完整的错误传播路径</li>
+                    <li><strong>分层抽象</strong>：上层不需要知道底层的具体实现细节</li>
+                    <li><strong>Cause链</strong>：通过 getCause() 方法可以追溯到根本原因</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">💻 代码实现对比</h3>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">C++ 版本：自定义异常 + noexcept</h4>
+            <div class="code-block">
+<span class="keyword">#include</span> <span class="string">&lt;iostream&gt;</span>
+<span class="keyword">#include</span> <span class="string">&lt;stdexcept&gt;</span>
+
+<span class="comment">// 自定义异常类</span>
+<span class="keyword">class</span> <span class="type">DatabaseException</span> : <span class="keyword">public</span> std::runtime_error {
+<span class="keyword">public</span>:
+    DatabaseException(<span class="keyword">const</span> std::string& msg) 
+        : std::runtime_error(msg) {}
+};
+
+<span class="comment">// 数据层：可能抛出异常</span>
+<span class="type">void</span> readFile(<span class="keyword">const</span> std::string& path) {
+    <span class="keyword">if</span> (path.empty()) {
+        <span class="keyword">throw</span> std::invalid_argument(<span class="string">"文件路径不能为空"</span>);
+    }
+    <span class="comment">// 模拟文件读取...</span>
+    <span class="keyword">throw</span> DatabaseException(<span class="string">"无法连接到数据库"</span>);
+}
+
+<span class="comment">// 服务层：捕获并转换异常</span>
+<span class="type">void</span> processData() {
+    <span class="keyword">try</span> {
+        readFile(<span class="string">"data.txt"</span>);
+    } <span class="keyword">catch</span> (<span class="keyword">const</span> std::invalid_argument& e) {
+        std::cerr &lt;&lt; <span class="string">"参数错误: "</span> &lt;&lt; e.what() &lt;&lt; std::endl;
+        <span class="keyword">throw</span>; <span class="comment">// 重新抛出</span>
+    } <span class="keyword">catch</span> (<span class="keyword">const</span> DatabaseException& e) {
+        <span class="comment">// 转换为更通用的异常</span>
+        <span class="keyword">throw</span> std::runtime_error(
+            std::string(<span class="string">"数据处理失败: "</span>) + e.what()
+        );
+    }
+}
+
+<span class="comment">// 主程序：最终处理</span>
+<span class="type">int</span> main() {
+    <span class="keyword">try</span> {
+        processData();
+    } <span class="keyword">catch</span> (<span class="keyword">const</span> std::exception& e) {
+        std::cerr &lt;&lt; <span class="string">"错误: "</span> &lt;&lt; e.what() &lt;&lt; std::endl;
+        <span class="keyword">return</span> 1;
+    }
+    <span class="keyword">return</span> 0;
+}
+
+<span class="comment">// noexcept：承诺不抛出异常</span>
+<span class="type">void</span> safeOperation() noexcept {
+    <span class="comment">// 如果这里抛出异常，程序会立即终止</span>
+}
+            </div>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">Java 版本：try-catch-finally + try-with-resources</h4>
+            <div class="code-block">
+<span class="keyword">import</span> java.io.*;
+<span class="keyword">import</span> java.sql.*;
+
+<span class="comment">// 自定义异常</span>
+<span class="keyword">class</span> <span class="type">BusinessException</span> <span class="keyword">extends</span> Exception {
+    <span class="keyword">public</span> BusinessException(String message, Throwable cause) {
+        <span class="keyword">super</span>(message, cause); <span class="comment">// 异常链</span>
+    }
+}
+
+<span class="comment">// 传统方式：try-catch-finally</span>
+<span class="keyword">public</span> <span class="type">void</span> oldStyleReadFile() {
+    BufferedReader reader = <span class="keyword">null</span>;
+    <span class="keyword">try</span> {
+        reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> FileReader(<span class="string">"data.txt"</span>));
+        String line = reader.readLine();
+        System.out.println(line);
+    } <span class="keyword">catch</span> (FileNotFoundException e) {
+        System.err.println(<span class="string">"文件不存在: "</span> + e.getMessage());
+    } <span class="keyword">catch</span> (IOException e) {
+        System.err.println(<span class="string">"IO错误: "</span> + e.getMessage());
+    } <span class="keyword">finally</span> {
+        <span class="comment">// 无论如何都会执行：清理资源</span>
+        <span class="keyword">if</span> (reader != <span class="keyword">null</span>) {
+            <span class="keyword">try</span> { reader.close(); } 
+            <span class="keyword">catch</span> (IOException e) { 
+                e.printStackTrace(); 
+            }
+        }
+    }
+}
+
+<span class="comment">// 现代方式：try-with-resources（自动关闭）</span>
+<span class="keyword">public</span> <span class="type">void</span> modernReadFile() <span class="keyword">throws</span> BusinessException {
+    <span class="keyword">try</span> (BufferedReader reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> FileReader(<span class="string">"data.txt"</span>))) {
+        String line = reader.readLine();
+        System.out.println(line);
+    } <span class="keyword">catch</span> (IOException e) {
+        <span class="comment">// 多异常捕获（Java 7+）</span>
+        <span class="keyword">throw new</span> BusinessException(<span class="string">"读取失败"</span>, e);
+    }
+    <span class="comment">// 不需要finally：reader自动关闭！</span>
+}
+
+<span class="comment">// 多层异常处理示例</span>
+<span class="keyword">public</span> <span class="type">void</span> processUserData() {
+    <span class="keyword">try</span> {
+        connectToDatabase();
+        queryUser();
+        updateUser();
+    } <span class="keyword">catch</span> (SQLException e) {
+        <span class="comment">// 记录详细日志</span>
+        logger.error(<span class="string">"数据库操作失败"</span>, e);
+        <span class="comment">// 转换为用户友好的异常</span>
+        <span class="keyword">throw new</span> BusinessException(<span class="string">"系统繁忙，请稍后重试"</span>, e);
+    }
+}
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">📊 Java：Checked vs Unchecked 异常对比</h3>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>特性</th>
+                        <th>Checked Exception（受检异常）</th>
+                        <th>Unchecked Exception（非受检异常）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>继承自</strong></td>
+                        <td>Exception（但不包括RuntimeException）</td>
+                        <td>RuntimeException 或 Error</td>
+                    </tr>
+                    <tr>
+                        <td><strong>编译时检查</strong></td>
+                        <td>✅ 必须处理或声明 throws</td>
+                        <td>❌ 可选处理</td>
+                    </tr>
+                    <tr>
+                        <td><strong>典型例子</strong></td>
+                        <td>IOException, SQLException</td>
+                        <td>NullPointerException, ArithmeticException</td>
+                    </tr>
+                    <tr>
+                        <td><strong>使用场景</strong></td>
+                        <td>可恢复的错误（文件不存在、网络断开）</td>
+                        <td>编程错误（空指针、数组越界）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>性能影响</strong></td>
+                        <td>略高（需要栈跟踪）</td>
+                        <td>相对较低</td>
+                    </tr>
+                    <tr>
+                        <td><strong>C++对应</strong></td>
+                        <td>无直接对应（C++所有异常都是unchecked）</td>
+                        <td>所有C++异常</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚡ 异常性能成本分析</h3>
+            
+            <div style="margin: 20px 0;">
+                <h4 style="color: #667eea;">正常执行（无异常）</h4>
+                <div class="performance-meter">
+                    <div class="performance-fill" style="width: 5%;">5%</div>
+                </div>
+                <p style="color: #666; font-size: 0.9em;">try块本身几乎没有开销，现代编译器优化得很好</p>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h4 style="color: #667eea;">抛出并捕获异常</h4>
+                <div class="performance-meter">
+                    <div class="performance-fill" style="width: 60%;">60%</div>
+                </div>
+                <p style="color: #666; font-size: 0.9em;">需要展开调用栈、创建异常对象、生成栈跟踪，开销较大</p>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h4 style="color: #667eea;">频繁使用异常进行流程控制</h4>
+                <div class="performance-meter">
+                    <div class="performance-fill" style="width: 90%;">90%</div>
+                </div>
+                <p style="color: #666; font-size: 0.9em;">❌ 严重性能问题！应该用 if-else 代替</p>
+            </div>
+            
+            <div class="explanation">
+                <h4>💡 性能最佳实践</h4>
+                <ul>
+                    <li><strong>异常应该是例外</strong>：不要用于正常的控制流</li>
+                    <li><strong>避免在循环中抛异常</strong>：会导致大量栈展开</li>
+                    <li><strong>重用异常对象</strong>：减少对象创建开销</li>
+                    <li><strong>禁用栈跟踪</strong>：对于高频异常，可以覆盖 fillInStackTrace()</li>
+                    <li><strong>C++ noexcept</strong>：标记不会异常的函数，帮助编译器优化</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">✅ 异常 vs 错误码：何时使用什么？</h3>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>场景</th>
+                        <th>推荐使用</th>
+                        <th>原因</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>构造函数失败</td>
+                        <td>✅ 异常</td>
+                        <td>构造函数没有返回值，无法返回错误码</td>
+                    </tr>
+                    <tr>
+                        <td>运算符重载失败</td>
+                        <td>✅ 异常</td>
+                        <td>运算符签名固定，无法添加错误参数</td>
+                    </tr>
+                    <tr>
+                        <td>深层嵌套调用中的错误</td>
+                        <td>✅ 异常</td>
+                        <td>避免层层传递错误码</td>
+                    </tr>
+                    <tr>
+                        <td>可预期的常见错误</td>
+                        <td>✅ 错误码/返回值</td>
+                        <td>如用户输入验证，性能更好</td>
+                    </tr>
+                    <tr>
+                        <td>实时系统/嵌入式</td>
+                        <td>✅ 错误码</td>
+                        <td>异常的不确定性时间开销不可接受</td>
+                    </tr>
+                    <tr>
+                        <td>资源管理</td>
+                        <td>✅ RAII + 异常</td>
+                        <td>C++的RAII模式完美配合异常</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎯 最佳实践</h3>
+            
+            <div class="best-practices">
+                <div class="practice-card good">
+                    <h4>✅ 捕获具体异常</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+<span class="keyword">try</span> {
+    readFile(path);
+} <span class="keyword">catch</span> (FileNotFoundException e) {
+    <span class="comment">// 精确处理</span>
+    createDefaultFile();
+} <span class="keyword">catch</span> (IOException e) {
+    <span class="comment">// 处理其他IO问题</span>
+    logError(e);
+}
+                    </div>
+                    <p style="color: #666; font-size: 0.9em;"><strong>优点</strong>：针对性强，不会意外捕获无关异常</p>
+                </div>
+                
+                <div class="practice-card bad">
+                    <h4>❌ 捕获过于宽泛</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+<span class="keyword">try</span> {
+    doSomething();
+} <span class="keyword">catch</span> (Exception e) {
+    <span class="comment">// 吞掉所有异常！</span>
+}
+                    </div>
+                    <p style="color: #666; font-size: 0.9em;"><strong>问题</strong>：可能隐藏严重的编程错误，难以调试</p>
+                </div>
+                
+                <div class="practice-card good">
+                    <h4>✅ 使用 finally 清理</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+FileInputStream fis = <span class="keyword">null</span>;
+<span class="keyword">try</span> {
+    fis = <span class="keyword">new</span> FileInputStream(file);
+    process(fis);
+} <span class="keyword">finally</span> {
+    <span class="keyword">if</span> (fis != <span class="keyword">null</span>) {
+        fis.close(); <span class="comment">// 总是执行</span>
+    }
+}
+                    </div>
+                    <p style="color: #666; font-size: 0.9em;"><strong>优点</strong>：确保资源释放，防止内存泄漏</p>
+                </div>
+                
+                <div class="practice-card good">
+                    <h4>✅ 创建有意义的自定义异常</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+<span class="keyword">class</span> <span class="type">InsufficientFundsException</span> 
+    <span class="keyword">extends</span> Exception {
+    <span class="keyword">private</span> <span class="keyword">double</span> amount;
+    
+    <span class="keyword">public</span> InsufficientFundsException(
+        <span class="keyword">double</span> amount) {
+        <span class="keyword">super</span>(<span class="string">"余额不足: "</span> + amount);
+        <span class="keyword">this</span>.amount = amount;
+    }
+    
+    <span class="keyword">public</span> <span class="keyword">double</span> getAmount() {
+        <span class="keyword">return</span> amount;
+    }
+}
+                    </div>
+                    <p style="color: #666; font-size: 0.9em;"><strong>优点</strong>：携带额外信息，便于上层处理</p>
+                </div>
+                
+                <div class="practice-card good">
+                    <h4>✅ 记录异常上下文</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+<span class="keyword">catch</span> (SQLException e) {
+    logger.error(
+        <span class="string">"查询失败 | SQL: {} | User: {}"</span>,
+        sqlQuery, userId, e
+    );
+    <span class="keyword">throw new</span> ServiceException(
+        <span class="string">"数据访问错误"</span>, e
+    );
+}
+                    </div>
+                    <p style="color: #666; font-size: 0.9em;"><strong>优点</strong>：便于排查问题，保留完整上下文</p>
+                </div>
+                
+                <div class="practice-card bad">
+                    <h4>❌ 空的 catch 块</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+<span class="keyword">try</span> {
+    criticalOperation();
+} <span class="keyword">catch</span> (Exception e) {
+    <span class="comment">// 什么都不做... 😱</span>
+}
+                    </div>
+                    <p style="color: #666; font-size: 0.9em;"><strong>问题</strong>：完全隐藏错误，导致难以发现的bug</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚠️ 常见错误</h3>
+            
+            <div class="best-practices">
+                <div class="practice-card bad">
+                    <h4>❌ 用异常做流程控制</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+<span class="comment">// 糟糕的做法</span>
+<span class="keyword">try</span> {
+    value = array[index];
+} <span class="keyword">catch</span> (IndexOutOfBoundsException e) {
+    value = defaultValue;
+}
+
+<span class="comment">// 正确的做法</span>
+<span class="keyword">if</span> (index >= 0 && index < array.length) {
+    value = array[index];
+} <span class="keyword">else</span> {
+    value = defaultValue;
+}
+                    </div>
+                    <p style="color: #f44336; font-size: 0.9em;"><strong>后果</strong>：性能差10-100倍，代码意图不清晰</p>
+                </div>
+                
+                <div class="practice-card bad">
+                    <h4>❌ 忽略异常原因</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+<span class="keyword">catch</span> (IOException e) {
+    <span class="keyword">throw new</span> ServiceException(
+        <span class="string">"出错了"</span>
+        <span class="comment">// 丢失了原始异常！</span>
+    );
+}
+
+<span class="comment">// 正确做法</span>
+<span class="keyword">catch</span> (IOException e) {
+    <span class="keyword">throw new</span> ServiceException(
+        <span class="string">"出错了"</span>, e  <span class="comment">// 保留cause链</span>
+    );
+}
+                    </div>
+                    <p style="color: #f44336; font-size: 0.9em;"><strong>后果</strong>：丢失根本原因，无法有效调试</p>
+                </div>
+                
+                <div class="practice-card bad">
+                    <h4>❌ 捕获 Throwable</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+<span class="keyword">try</span> {
+    doWork();
+} <span class="keyword">catch</span> (Throwable t) {
+    <span class="comment">// 连OutOfMemoryError都捕获了！</span>
+    <span class="comment">// 系统可能已经处于不一致状态</span>
+}
+                    </div>
+                    <p style="color: #f44336; font-size: 0.9em;"><strong>后果</strong>：可能捕获严重系统错误，掩盖真正问题</p>
+                </div>
+                
+                <div class="practice-card bad">
+                    <h4>❌ 在finally中return</h4>
+                    <div class="code-block" style="margin: 10px 0; padding: 10px; font-size: 0.85em;">
+<span class="keyword">try</span> {
+    <span class="keyword">return</span> computeResult();
+} <span class="keyword">finally</span> {
+    <span class="keyword">return</span> 0; <span class="comment">// 覆盖了try中的返回值！</span>
+}
+                    </div>
+                    <p style="color: #f44336; font-size: 0.9em;"><strong>后果</strong>：逻辑混乱，返回值不符合预期</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="explanation" style="background: #e6f3ff; border-color: #667eea;">
+            <h4 style="color: #667eea;">🎯 核心要点总结</h4>
+            <ul>
+                <li><strong>异常的本质</strong>：一种结构化的错误处理机制，允许错误向上传播</li>
+                <li><strong>try-catch-finally</strong>：尝试执行 → 捕获处理 → 最终清理</li>
+                <li><strong>异常链</strong>：保留错误的因果关系，便于调试和分层抽象</li>
+                <li><strong>性能考虑</strong>：异常应该用于真正的异常情况，而非正常流程控制</li>
+                <li><strong>最佳实践</strong>：捕获具体异常、记录上下文、使用finally清理、创建有意义的自定义异常</li>
+                <li><strong>语言差异</strong>：Java有checked/unchecked之分，C++所有异常都是unchecked但有noexcept</li>
+                <li><strong>适用场景</strong>：构造函数失败、深层调用错误、资源管理；不适用：可预期的常见错误、实时系统</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        let isHandled = true;
+        let currentException = null;
+        let animationInProgress = false;
+        
+        function toggleHandling() {
+            isHandled = !isHandled;
+            const switchEl = document.getElementById('handlingSwitch');
+            const labelEl = document.getElementById('handlingLabel');
+            const statusEl = document.getElementById('statusIndicator');
+            
+            if (isHandled) {
+                switchEl.classList.add('active');
+                labelEl.textContent = '已处理（有catch）';
+                statusEl.className = 'status-indicator handled';
+                statusEl.innerHTML = '✅ 异常将被捕获并处理';
+            } else {
+                switchEl.classList.remove('active');
+                labelEl.textContent = '未处理（无catch）';
+                statusEl.className = 'status-indicator unhandled';
+                statusEl.innerHTML = '❌ 异常将向上传播直至程序崩溃';
+            }
+        }
+        
+        function selectRoom(roomId) {
+            // 清除所有active状态
+            document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+            document.querySelectorAll('.catch-block').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.firefighter').forEach(f => f.classList.remove('active'));
+            document.querySelectorAll('.sprinkler').forEach(s => s.classList.remove('active'));
+            
+            // 激活选中的房间
+            const room = document.getElementById('room-' + roomId);
+            if (room) {
+                room.classList.add('active');
+            }
+        }
+        
+        function simulateException(type) {
+            if (animationInProgress) return;
+            animationInProgress = true;
+            
+            // 重置所有状态
+            resetVisuals();
+            
+            let exceptionType, exceptionMessage, startFloor, alarmClass;
+            
+            switch(type) {
+                case 'divide':
+                    exceptionType = 'ArithmeticException';
+                    exceptionMessage = '/ by zero';
+                    startFloor = 'data';
+                    alarmClass = 'fire';
+                    break;
+                case 'file':
+                    exceptionType = 'FileNotFoundException';
+                    exceptionMessage = 'data.txt (No such file or directory)';
+                    startFloor = 'data';
+                    alarmClass = 'file';
+                    break;
+                case 'network':
+                    exceptionType = 'ConnectException';
+                    exceptionMessage = 'Connection refused: localhost:3306';
+                    startFloor = 'data';
+                    alarmClass = 'network';
+                    break;
+            }
+            
+            currentException = { type, exceptionType, exceptionMessage, startFloor };
+            
+            // 显示起始楼层的警报
+            const alarm = document.getElementById('alarm-' + startFloor);
+            alarm.className = 'alarm ' + alarmClass;
+            alarm.innerHTML = type === 'divide' ? '🔥' : type === 'file' ? '📁' : '🌐';
+            
+            // 更新说明
+            updateExplanation(type, exceptionType, exceptionMessage);
+            
+            // 开始动画：异常向上传播
+            setTimeout(() => {
+                animateExceptionPropagation(startFloor, exceptionType, exceptionMessage);
+            }, 500);
+        }
+        
+        function animateExceptionPropagation(startFloor, exceptionType, exceptionMessage) {
+            const particle = document.getElementById('exceptionParticle');
+            const floors = ['data', 'service', 'main'];
+            const startY = startFloor === 'data' ? 350 : startFloor === 'service' ? 210 : 70;
+            
+            particle.style.display = 'flex';
+            particle.style.left = '50%';
+            particle.style.top = startY + 'px';
+            particle.innerHTML = '!';
+            
+            let currentFloorIndex = floors.indexOf(startFloor);
+            
+            function moveUp() {
+                if (currentFloorIndex >= floors.length - 1) {
+                    // 到达顶层
+                    handleAtTopLevel(exceptionType, exceptionMessage);
+                    return;
+                }
+                
+                currentFloorIndex++;
+                const nextFloor = floors[currentFloorIndex];
+                const nextY = nextFloor === 'data' ? 350 : nextFloor === 'service' ? 210 : 70;
+                
+                // 移动粒子
+                particle.style.transition = 'top 1s ease-in-out';
+                particle.style.top = nextY + 'px';
+                
+                // 激活下一层的警报
+                setTimeout(() => {
+                    const nextAlarm = document.getElementById('alarm-' + nextFloor);
+                    nextAlarm.className = 'alarm fire';
+                    nextAlarm.innerHTML = '⚠️';
+                    
+                    // 检查这一层是否有catch
+                    if (isHandled && currentFloorIndex === floors.length - 1) {
+                        // 在顶层被捕获
+                        setTimeout(() => {
+                            catchException(nextFloor, exceptionType);
+                        }, 500);
+                    } else {
+                        // 继续向上传播
+                        setTimeout(moveUp, 1000);
+                    }
+                }, 1000);
+            }
+            
+            // 开始向上传播
+            setTimeout(moveUp, 500);
+        }
+        
+        function catchException(floor, exceptionType) {
+            const catchBlock = document.getElementById('catch-' + floor);
+            const firefighter = document.getElementById('firefighter-' + floor);
+            const sprinkler = document.getElementById('sprinkler-' + floor);
+            
+            catchBlock.classList.add('active');
+            firefighter.classList.add('active');
+            
+            // 显示finally清理
+            setTimeout(() => {
+                sprinkler.classList.add('active');
+                
+                // 更新说明
+                const expl = document.getElementById('explanation');
+                expl.innerHTML = `
+                    <h4>✅ 异常已被处理</h4>
+                    <p><strong>${floor.toUpperCase()}层</strong>的catch块成功捕获了 <span class="highlight">${exceptionType}</span></p>
+                    <ul>
+                        <li>👨‍🚒 消防队（catch）进行了专业处理</li>
+                        <li>💦 喷淋系统（finally）确保了现场清理</li>
+                        <li>✅ 程序可以继续正常运行</li>
+                    </ul>
+                `;
+                
+                animationInProgress = false;
+            }, 500);
+        }
+        
+        function handleAtTopLevel(exceptionType, exceptionMessage) {
+            const particle = document.getElementById('exceptionParticle');
+            
+            if (!isHandled) {
+                // 未处理：程序崩溃
+                particle.innerHTML = '💥';
+                particle.style.background = 'radial-gradient(circle, #ff0000 0%, #990000 100%)';
+                
+                const expl = document.getElementById('explanation');
+                expl.innerHTML = `
+                    <h4>💥 程序崩溃！</h4>
+                    <p>异常 <span class="highlight">${exceptionType}</span> 未被任何catch块捕获</p>
+                    <ul>
+                        <li>❌ JVM/C++运行时终止程序</li>
+                        <li>❌ 打印完整的stack trace</li>
+                        <li>❌ 可能导致资源泄漏</li>
+                        <li><strong>教训：</strong>总是在适当的位置捕获异常！</li>
+                    </ul>
+                `;
+                
+                // 显示stack trace
+                showStackTraceForException(exceptionType, exceptionMessage);
+            } else {
+                // 在顶层被捕获
+                catchException('main', exceptionType);
+            }
+            
+            animationInProgress = false;
+        }
+        
+        function showStackTrace() {
+            if (!currentException) {
+                alert('请先模拟一个异常！');
+                return;
+            }
+            
+            const container = document.getElementById('stackTraceContainer');
+            const stackTrace = document.getElementById('stackTrace');
+            
+            container.style.display = 'block';
+            
+            let html = '';
+            const frames = [
+                { method: 'main', file: 'Main.java', line: 15, current: false },
+                { method: 'processData', file: 'ServiceLayer.java', line: 42, current: false },
+                { method: 'readFile', file: 'DataLayer.java', line: 28, current: true }
+            ];
+            
+            frames.forEach((frame, index) => {
+                const currentClass = frame.current ? 'current' : '';
+                html += `
+                    <div class="stack-frame ${currentClass}">
+                        <strong>${frame.method}()</strong> at ${frame.file}:${frame.line}
+                        ${frame.current ? '<br><small style="color: #ff6b6b;">← 异常发生在这里</small>' : ''}
+                    </div>
+                `;
+            });
+            
+            html += `<div style="margin-top: 15px; color: #ff6b6b;"><strong>${currentException.exceptionType}: ${currentException.exceptionMessage}</strong></div>`;
+            
+            stackTrace.innerHTML = html;
+        }
+        
+        function showStackTraceForException(exceptionType, exceptionMessage) {
+            const container = document.getElementById('stackTraceContainer');
+            const stackTrace = document.getElementById('stackTrace');
+            
+            container.style.display = 'block';
+            
+            stackTrace.innerHTML = `
+                <div class="stack-frame current">
+                    <strong>readFile()</strong> at DataLayer.java:28<br>
+                    <small style="color: #ff6b6b;">← 异常发生在这里</small>
+                </div>
+                <div class="stack-frame">
+                    <strong>processData()</strong> at ServiceLayer.java:42
+                </div>
+                <div class="stack-frame">
+                    <strong>main()</strong> at Main.java:15
+                </div>
+                <div style="margin-top: 15px; color: #ff6b6b;">
+                    <strong>Exception in thread "main" ${exceptionType}: ${exceptionMessage}</strong>
+                </div>
+            `;
+        }
+        
+        function showExceptionChain() {
+            document.getElementById('exceptionChain').style.display = 'flex';
+        }
+        
+        function hideExceptionChain() {
+            document.getElementById('exceptionChain').style.display = 'none';
+        }
+        
+        function updateExplanation(type, exceptionType, exceptionMessage) {
+            const expl = document.getElementById('explanation');
+            let typeName, description;
+            
+            switch(type) {
+                case 'divide':
+                    typeName = '算术异常';
+                    description = '除以零是数学上未定义的操作';
+                    break;
+                case 'file':
+                    typeName = '文件未找到';
+                    description = '请求的文件不存在或路径错误';
+                    break;
+                case 'network':
+                    typeName = '网络连接失败';
+                    description = '无法建立到目标服务器的连接';
+                    break;
+            }
+            
+            expl.innerHTML = `
+                <h4>🔔 异常触发：${typeName}</h4>
+                <p><strong>异常类型：</strong><span class="highlight">${exceptionType}</span></p>
+                <p><strong>错误信息：</strong>${exceptionMessage}</p>
+                <p><strong>描述：</strong>${description}</p>
+                <ul>
+                    <li>1️⃣ 异常在<strong>数据层</strong>被throw关键字抛出</li>
+                    <li>2️⃣ 警报响起，异常开始向上传播</li>
+                    <li>3️⃣ 每一层检查是否有对应的catch块</li>
+                    <li>4️⃣ ${isHandled ? '最终在某一层的catch块中被处理' : '如果没有catch块，程序将崩溃'}</li>
+                </ul>
+            `;
+        }
+        
+        function resetVisuals() {
+            // 清除所有警报
+            document.querySelectorAll('.alarm').forEach(a => {
+                a.className = 'alarm';
+                a.innerHTML = '';
+            });
+            
+            // 清除catch块
+            document.querySelectorAll('.catch-block').forEach(c => c.classList.remove('active'));
+            
+            // 清除消防员
+            document.querySelectorAll('.firefighter').forEach(f => f.classList.remove('active'));
+            
+            // 清除喷淋
+            document.querySelectorAll('.sprinkler').forEach(s => s.classList.remove('active'));
+            
+            // 清除粒子
+            const particle = document.getElementById('exceptionParticle');
+            particle.style.display = 'none';
+            particle.style.transition = 'none';
+            particle.style.background = 'radial-gradient(circle, #ff6b6b 0%, #cc0000 100%)';
+            particle.innerHTML = '!';
+            
+            // 清除房间active状态
+            document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+            
+            // 隐藏stack trace
+            document.getElementById('stackTraceContainer').style.display = 'none';
+            
+            // 隐藏异常链
+            document.getElementById('exceptionChain').style.display = 'none';
+        }
+        
+        function resetSimulation() {
+            resetVisuals();
+            currentException = null;
+            animationInProgress = false;
+            
+            const expl = document.getElementById('explanation');
+            expl.innerHTML = `
+                <h4>📖 使用说明</h4>
+                <p>点击上方的按钮模拟不同类型的异常，观察异常如何在调用栈中传播！</p>
+                <ul>
+                    <li><strong>除零错误</strong>：数学运算异常，通常在数据层触发</li>
+                    <li><strong>文件未找到</strong>：IO异常，可能在服务层或数据层触发</li>
+                    <li><strong>网络错误</strong>：连接异常，通常从底层向上传播</li>
+                    <li><strong>切换处理模式</strong>：观察有无catch块时的不同行为</li>
+                </ul>
+            `;
+        }
+        
+        // 初始化
+        resetSimulation();
+    </script>
+</body>
+</html>

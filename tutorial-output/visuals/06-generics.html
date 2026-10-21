@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: 泛型是什么？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .analogy-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .analogy-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .analogy-box p {
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .visual-area {
+            margin: 40px 0;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 15px;
+            min-height: 300px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        select {
+            background: white;
+            border: 2px solid #667eea;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            color: #667eea;
+        }
+        
+        .explanation {
+            background: #fff9e6;
+            border: 2px solid #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .explanation h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .highlight {
+            background: yellow;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+        
+        .code-block .type {
+            color: #8be9fd;
+        }
+        
+        .code-block .string {
+            color: #f1fa8c;
+        }
+        
+        .code-block .comment {
+            color: #6272a4;
+        }
+        
+        .code-block .placeholder {
+            color: #ffb86c;
+            font-weight: bold;
+        }
+        
+        .recipe-book {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .recipe-book::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .recipe-title {
+            text-align: center;
+            font-size: 1.8em;
+            color: #2d3436;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .recipe-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .placeholder-text {
+            background: #74b9ff;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 5px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+        
+        .ingredient-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .ingredient-item {
+            background: #f8f9fa;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+        
+        .ingredient-item.filled {
+            background: #dfe6e9;
+            border-left-color: #00b894;
+        }
+        
+        .generic-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 150px;
+            height: 100px;
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            border-radius: 15px;
+            margin: 15px;
+            padding: 15px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .generic-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.6);
+        }
+        
+        .type-label {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #fd79a8;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .arrow-connector {
+            font-size: 2.5em;
+            color: #667eea;
+            margin: 0 15px;
+            animation: arrowMove 1.5s infinite;
+        }
+        
+        @keyframes arrowMove {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(10px); }
+        }
+        
+        .specialization-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .spec-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-top: 4px solid #667eea;
+        }
+        
+        .spec-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .erasure-steps {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .erasure-step {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 200px;
+            margin: 10px;
+            position: relative;
+        }
+        
+        .erasure-step::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+            color: #667eea;
+        }
+        
+        .erasure-step:last-child::after {
+            display: none;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .compile-error {
+            background: #ff7675;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .compile-success {
+            background: #00b894;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        .variadic-demo {
+            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .variadic-demo h3 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .parameter-pack {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        .param-bubble {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 2px solid white;
+            animation: bubbleIn 0.5s ease-out;
+        }
+        
+        @keyframes bubbleIn {
+            from { opacity: 0; transform: scale(0); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .use-case-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .use-case-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s;
+        }
+        
+        .use-case-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .use-case-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .limitation-box {
+            background: #ffeaa7;
+            border-left: 5px solid #fdcb6e;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+        
+        .limitation-box h4 {
+            color: #e17055;
+            margin-bottom: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .interactive-playground {
+            background: #f8f9fa;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .playground-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 ELI5: 泛型是什么？</h1>
+        <p class="subtitle">万能食谱书：一份配方，多种食材</p>
+        
+        <div class="analogy-box">
+            <h3>💡 生活类比：万能食谱书</h3>
+            <p>想象你有一本<strong>万能食谱书</strong>：</p>
+            <ul style="margin-left: 20px; margin-top: 10px; color: #555;">
+                <li><strong>模板/泛型</strong> = 带有占位符食材的食谱（比如"<T>"代表任意食材）</li>
+                <li><strong>实例化</strong> = 填入真实食材（整数、字符串、自定义类型）</li>
+                <li><strong>类型安全</strong> = 厨房防止混合不兼容的食材（不能把数字和文字混在一起煮）</li>
+            </ul>
+            <p style="margin-top: 10px;"><strong>核心思想：</strong>写一次代码，适用于多种数据类型，编译器帮你检查类型错误！</p>
+        </div>
+        
+        <!-- Recipe Book Visualization -->
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">📚 万能食谱书演示</h3>
+            
+            <div class="recipe-book">
+                <div class="recipe-title">🍳 通用容器食谱</div>
+                
+                <div class="recipe-content">
+                    <h4>原料清单：</h4>
+                    <ul class="ingredient-list">
+                        <li class="ingredient-item" id="ing1">
+                            <span class="placeholder-text">&lt;T&gt;</span> - 任意类型的食材
+                        </li>
+                        <li class="ingredient-item">容量：可以装多少份</li>
+                        <li class="ingredient-item">标签：记录里面装的是什么</li>
+                    </ul>
+                    
+                    <h4 style="margin-top: 20px;">制作步骤：</h4>
+                    <ol style="margin-left: 20px; color: #555;">
+                        <li>准备一个空容器</li>
+                        <li>放入<span class="placeholder-text">&lt;T&gt;</span>类型的食材</li>
+                        <li>盖上盖子，贴上类型标签</li>
+                        <li>随时可以取出相同类型的食材</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button onclick="fillRecipe('int')">🔢 填入整数 (int)</button>
+                <button onclick="fillRecipe('string')">📝 填入字符串 (string)</button>
+                <button onclick="fillRecipe('double')">🔬 填入小数 (double)</button>
+                <button onclick="resetRecipe()">🔄 重置食谱</button>
+            </div>
+            
+            <div class="explanation" id="recipeExplanation">
+                <h4>📖 当前状态</h4>
+                <p>选择一个类型来实例化这个通用容器！</p>
+            </div>
+        </div>
+        
+        <!-- Type Substitution Animation -->
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎭 类型替换动画</h3>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="display: inline-flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                    <div class="generic-container" id="genericBox">
+                        Box&lt;<span class="placeholder-text" id="typePlaceholder">T</span>&gt;
+                    </div>
+                    
+                    <div class="arrow-connector">➡️</div>
+                    
+                    <div class="generic-container" id="instantiatedBox" style="opacity: 0.3;">
+                        Box&lt;<span id="actualType">?</span>&gt;
+                        <div class="type-label" id="typeLabel" style="display: none;">类型</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <select id="typeSelector" onchange="instantiateType()">
+                    <option value="">-- 选择类型 --</option>
+                    <option value="int">int (整数)</option>
+                    <option value="string">string (字符串)</option>
+                    <option value="double">double (小数)</option>
+                    <option value="Person">Person (自定义类)</option>
+                </select>
+                <button onclick="animateInstantiation()">✨ 实例化</button>
+            </div>
+            
+            <div class="explanation" id="instantiationExplanation">
+                <h4>📖 发生了什么？</h4>
+                <p>当你在编译时指定具体类型，编译器会生成该类型的专属版本！</p>
+            </div>
+        </div>
+        
+        <!-- Compile-time vs Runtime Checking -->
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚙️ 编译时 vs 运行时类型检查</h3>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('compile')">编译时检查 (C++)</button>
+                <button class="tab" onclick="switchTab('runtime')">运行时擦除 (Java)</button>
+            </div>
+            
+            <div id="compileTab" class="tab-content active">
+                <div class="code-block">
+<pre><span class="comment">// C++ 模板：编译时生成具体代码</span>
+<span class="keyword">template</span>&lt;<span class="keyword">typename</span> <span class="placeholder">T</span>&gt;
+<span class="keyword">class</span> <span class="type">Box</span> {
+    <span class="type">T</span> value;
+<span class="keyword">public</span>:
+    <span class="keyword">void</span> set(<span class="type">T</span> v) { value = v; }
+    <span class="type">T</span> get() { <span class="keyword">return</span> value; }
+};
+
+<span class="comment">// 编译时生成两个独立版本</span>
+<span class="type">Box</span>&lt;<span class="type">int</span>&gt; intBox;      <span class="comment">// → 生成 Box_int 类</span>
+<span class="type">Box</span>&lt;<span class="type">string</span>&gt; strBox;   <span class="comment">// → 生成 Box_string 类</span>
+
+intBox.set(<span class="string">"hello"</span>);  <span class="comment">// ❌ 编译错误！类型不匹配</span></pre>
+                </div>
+                
+                <div class="compile-error" id="cppError">
+                    <strong>❌ 编译错误：</strong> cannot convert 'const char*' to 'int' in assignment
+                </div>
+                
+                <div class="compile-success" id="cppSuccess">
+                    <strong>✅ 编译成功：</strong> 类型检查通过，生成高效机器码
+                </div>
+                
+                <div class="controls">
+                    <button onclick="testCppCompile(true)">✅ 测试正确代码</button>
+                    <button onclick="testCppCompile(false)">❌ 测试类型错误</button>
+                </div>
+            </div>
+            
+            <div id="runtimeTab" class="tab-content">
+                <div class="erasure-steps">
+                    <div class="erasure-step">
+                        <div class="step-number">1</div>
+                        <h4>源代码</h4>
+                        <code style="background: #f0f0f0; padding: 10px; border-radius: 5px; display: block; margin: 10px 0;">
+                            List&lt;String&gt; list
+                        </code>
+                        <p style="color: #666; font-size: 0.9em;">编译器看到泛型</p>
+                    </div>
+                    
+                    <div class="erasure-step">
+                        <div class="step-number">2</div>
+                        <h4>类型检查</h4>
+                        <code style="background: #dfe6e9; padding: 10px; border-radius: 5px; display: block; margin: 10px 0;">
+                            list.add("hello") ✅<br>
+                            list.add(123) ❌
+                        </code>
+                        <p style="color: #666; font-size: 0.9em;">验证类型安全</p>
+                    </div>
+                    
+                    <div class="erasure-step">
+                        <div class="step-number">3</div>
+                        <h4>类型擦除</h4>
+                        <code style="background: #b2bec3; padding: 10px; border-radius: 5px; display: block; margin: 10px 0;">
+                            List list<br>
+                            (泛型信息消失)
+                        </code>
+                        <p style="color: #666; font-size: 0.9em;">运行时只剩原始类型</p>
+                    </div>
+                </div>
+                
+                <div class="explanation">
+                    <h4>⚠️ Java 类型擦除的限制</h4>
+                    <ul>
+                        <li>运行时无法获取泛型类型信息</li>
+                        <li>不能创建泛型数组：<code>List&lt;T&gt;[]</code> 非法</li>
+                        <li>不能用 <code>instanceof</code> 检查泛型类型</li>
+                        <li>静态方法不能使用类的泛型参数</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Template Specialization -->
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎨 C++ 模板特化：定制特殊食谱</h3>
+            
+            <div class="specialization-demo">
+                <div class="spec-card">
+                    <h4>📋 通用模板</h4>
+                    <div class="code-block" style="font-size: 0.9em;">
+<pre><span class="keyword">template</span>&lt;<span class="keyword">typename</span> <span class="placeholder">T</span>&gt;
+<span class="keyword">class</span> <span class="type">Box</span> {
+    <span class="type">T</span> value;
+<span class="keyword">public</span>:
+    <span class="keyword">void</span> print() {
+        cout &lt;&lt; value;
+    }
+};</pre>
+                    </div>
+                    <p style="color: #666; margin-top: 10px;">适用于所有类型</p>
+                </div>
+                
+                <div class="spec-card">
+                    <h4>🎯 string 特化版本</h4>
+                    <div class="code-block" style="font-size: 0.9em;">
+<pre><span class="keyword">template</span>&lt;&gt;
+<span class="keyword">class</span> <span class="type">Box</span>&lt;<span class="type">string</span>&gt; {
+    <span class="type">string</span> value;
+<span class="keyword">public</span>:
+    <span class="keyword">void</span> print() {
+        cout &lt;&lt; <span class="string">"[str]"</span> 
+             &lt;&lt; value;
+    }
+};</pre>
+                    </div>
+                    <p style="color: #666; margin-top: 10px;">为 string 定制行为</p>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button onclick="showSpecialization('int')">测试 int 版本</button>
+                <button onclick="showSpecialization('string')">测试 string 特化</button>
+            </div>
+            
+            <div class="explanation" id="specExplanation">
+                <h4>📖 模板特化说明</h4>
+                <p>当某个类型需要特殊处理时，可以提供专门的实现。编译器会优先使用特化版本！</p>
+            </div>
+        </div>
+        
+        <!-- Variadic Templates -->
+        <div class="visual-area">
+            <div class="variadic-demo">
+                <h3>🎪 可变参数模板：接受任意数量的食材</h3>
+                
+                <p style="text-align: center; margin-bottom: 20px;">就像一道可以放任意数量配料的沙拉！</p>
+                
+                <div class="code-block" style="background: rgba(255,255,255,0.2);">
+<pre><span class="keyword">template</span>&lt;<span class="keyword">typename</span>... <span class="placeholder">Args</span>&gt;
+<span class="keyword">void</span> printAll(<span class="placeholder">Args</span>... args) {
+    (<span class="keyword">cout</span> &lt;&lt; ... &lt;&lt; args);
+}
+
+<span class="comment">// 可以传入任意数量和类型的参数</span>
+printAll(<span class="number">1</span>, <span class="string">"hello"</span>, <span class="number">3.14</span>, <span class="keyword">true</span>);</pre>
+                </div>
+                
+                <div class="parameter-pack" id="paramPack">
+                    <div class="param-bubble">点击按钮添加参数</div>
+                </div>
+                
+                <div class="controls">
+                    <button onclick="addParameter('int', '42')">➕ 添加整数</button>
+                    <button onclick="addParameter('string', '"hi"')">➕ 添加字符串</button>
+                    <button onclick="addParameter('double', '3.14')">➕ 添加小数</button>
+                    <button onclick="clearParameters()">🗑️ 清空</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Interactive Playground -->
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎮 交互式泛型游乐场</h3>
+            
+            <div class="interactive-playground">
+                <h4>构建你的泛型容器</h4>
+                
+                <div style="margin: 20px 0;">
+                    <label style="margin-right: 10px;">容器类型：</label>
+                    <select id="containerType">
+                        <option value="Box">Box&lt;T&gt; - 单值盒子</option>
+                        <option value="List">List&lt;T&gt; - 列表</option>
+                        <option value="Map">Map&lt;K,V&gt; - 键值对</option>
+                    </select>
+                    
+                    <label style="margin: 0 10px 0 20px;">元素类型：</label>
+                    <select id="elementType">
+                        <option value="int">int</option>
+                        <option value="string">string</option>
+                        <option value="double">double</option>
+                    </select>
+                </div>
+                
+                <div class="controls">
+                    <button onclick="createContainer()">🏗️ 创建容器</button>
+                    <button onclick="addElement()">➕ 添加元素</button>
+                    <button onclick="checkTypes()">✅ 类型检查</button>
+                </div>
+                
+                <div class="playground-result" id="playgroundResult">
+                    <p style="color: #999;">选择配置并创建容器开始实验！</p>
+                </div>
+                
+                <div class="compile-error" id="playgroundError"></div>
+                <div class="compile-success" id="playgroundSuccess"></div>
+            </div>
+        </div>
+        
+        <!-- C++ vs Java Comparison -->
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚔️ C++ 模板 vs Java 泛型对比</h3>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>特性</th>
+                        <th>C++ 模板</th>
+                        <th>Java 泛型</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>实现机制</strong></td>
+                        <td>编译时代码生成</td>
+                        <td>类型擦除（Type Erasure）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>性能</strong></td>
+                        <td>⭐ 零开销，内联优化</td>
+                        <td>🐢 有装箱/拆箱开销</td>
+                    </tr>
+                    <tr>
+                        <td><strong>特化支持</strong></td>
+                        <td>✅ 完全支持模板特化</td>
+                        <td>❌ 不支持</td>
+                    </tr>
+                    <tr>
+                        <td><strong>类型约束</strong></td>
+                        <td>SFINAE / Concepts (C++20)</td>
+                        <td>通配符 <? extends T></td>
+                    </tr>
+                    <tr>
+                        <td><strong>编译错误信息</strong></td>
+                        <td>😱 可能非常冗长复杂</td>
+                        <td>😊 相对清晰易懂</td>
+                    </tr>
+                    <tr>
+                        <td><strong>代码膨胀</strong></td>
+                        <td>⚠️ 每种类型生成独立代码</td>
+                        <td>✅ 只有一份字节码</td>
+                    </tr>
+                    <tr>
+                        <td><strong>运行时类型信息</strong></td>
+                        <td>✅ 保留完整类型信息</td>
+                        <td>❌ 泛型类型被擦除</td>
+                    </tr>
+                    <tr>
+                        <td><strong>元编程能力</strong></td>
+                        <td>🚀 强大的编译期计算</td>
+                        <td>🔧 有限的反射能力</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="explanation">
+                <h4>💡 如何选择？</h4>
+                <ul>
+                    <li><strong>C++ 模板</strong>：追求极致性能、需要特化、编译期元编程</li>
+                    <li><strong>Java 泛型</strong>：简化开发、向后兼容、运行时灵活性</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Use Cases -->
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎯 泛型的实际应用场景</h3>
+            
+            <div class="use-case-grid">
+                <div class="use-case-card">
+                    <h4>📦 容器类</h4>
+                    <p><strong>List&lt;T&gt;, Map&lt;K,V&gt;</strong></p>
+                    <p style="color: #666; margin-top: 10px;">存储任意类型的数据集合，保持类型安全</p>
+                    <div class="code-block" style="font-size: 0.85em; margin-top: 10px;">
+<pre><span class="type">List</span>&lt;<span class="type">String</span>&gt; names = 
+    <span class="keyword">new</span> <span class="type">ArrayList</span>&lt;&gt;();
+names.add(<span class="string">"Alice"</span>);
+<span class="type">String</span> name = names.get(<span class="number">0</span>);</pre>
+                    </div>
+                </div>
+                
+                <div class="use-case-card">
+                    <h4>🔧 算法模板</h4>
+                    <p><strong>sort(), find(), filter()</strong></p>
+                    <p style="color: #666; margin-top: 10px;">对任何可比较类型执行相同算法</p>
+                    <div class="code-block" style="font-size: 0.85em; margin-top: 10px;">
+<pre><span class="keyword">template</span>&lt;<span class="keyword">typename</span> <span class="placeholder">T</span>&gt;
+<span class="keyword">void</span> sort(<span class="type">vector</span>&lt;<span class="placeholder">T</span>&gt;& v) {
+    <span class="comment">// 排序逻辑</span>
+}</pre>
+                    </div>
+                </div>
+                
+                <div class="use-case-card">
+                    <h4>🏭 工厂模式</h4>
+                    <p><strong>Generic Factory</strong></p>
+                    <p style="color: #666; margin-top: 10px;">根据类型动态创建对象</p>
+                    <div class="code-block" style="font-size: 0.85em; margin-top: 10px;">
+<pre><span class="keyword">template</span>&lt;<span class="keyword">typename</span> <span class="placeholder">T</span>&gt;
+<span class="placeholder">T</span>* create() {
+    <span class="keyword">return new</span> <span class="placeholder">T</span>();
+}</pre>
+                    </div>
+                </div>
+                
+                <div class="use-case-card">
+                    <h4>🏗️ Builder 模式</h4>
+                    <p><strong>Fluent API with Generics</strong></p>
+                    <p style="color: #666; margin-top: 10px;">链式调用保持类型信息</p>
+                    <div class="code-block" style="font-size: 0.85em; margin-top: 10px;">
+<pre><span class="keyword">class</span> <span class="type">Builder</span>&lt;<span class="placeholder">T</span>&gt; {
+    <span class="type">Builder</span>&lt;<span class="placeholder">T</span>&gt; setName(<span class="type">String</span> n);
+    <span class="type">Builder</span>&lt;<span class="placeholder">T</span>&gt; setAge(<span class="keyword">int</span> a);
+    <span class="placeholder">T</span> build();
+};</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Limitations -->
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚠️ 泛型的局限性</h3>
+            
+            <div class="limitation-box">
+                <h4>🚫 Java 不能使用基本类型</h4>
+                <p><code>List&lt;int&gt;</code> ❌ 非法！必须用包装类 <code>List&lt;Integer&gt;</code></p>
+                <p style="margin-top: 10px; color: #666;">原因：类型擦除后变成 <code>List</code>，而基本类型不是对象</p>
+            </div>
+            
+            <div class="limitation-box">
+                <h4>🚫 类型擦除的限制</h4>
+                <ul style="margin-left: 20px; color: #555;">
+                    <li>运行时无法知道 <code>List&lt;String&gt;</code> 原本是 String 类型</li>
+                    <li>不能创建泛型数组：<code>new T[10]</code> 编译错误</li>
+                    <li>不能用 <code>instanceof T</code> 进行类型检查</li>
+                </ul>
+            </div>
+            
+            <div class="limitation-box">
+                <h4>🚫 C++ 模板编译错误难以阅读</h4>
+                <div class="code-block" style="font-size: 0.8em;">
+<pre><span class="comment">// 错误信息可能长达几百行！</span>
+error: no match for 'operator+' in 
+'std::basic_string<char> + int'
+... (200 more lines of template instantiation trace) ...</pre>
+                </div>
+            </div>
+            
+            <div class="limitation-box">
+                <h4>🚫 代码膨胀问题</h4>
+                <p>C++ 中每种类型组合都会生成独立代码，可能导致二进制文件变大</p>
+                <p style="margin-top: 10px; color: #666;"><strong>解决方案：</strong>使用指针或引用减少实例化，C++17 的 <code>std::variant</code></p>
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">📝 总结</h3>
+            
+            <div class="analogy-box">
+                <h3>🎓 关键要点</h3>
+                <ul style="margin-left: 20px; color: #555;">
+                    <li><strong>泛型 = 万能食谱</strong>：写一次，适配多种类型</li>
+                    <li><strong>类型安全</strong>：编译器在编译时检查类型错误，避免运行时崩溃</li>
+                    <li><strong>C++ vs Java</strong>：编译时生成 vs 运行时擦除，各有优劣</li>
+                    <li><strong>实际应用</strong>：容器、算法、设计模式都离不开泛型</li>
+                    <li><strong>注意局限</strong>：了解每种语言的泛型限制，选择合适的方案</li>
+                </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <p style="color: #667eea; font-size: 1.2em; font-weight: bold;">
+                    🎉 现在你已经掌握了泛型的奥秘！
+                </p>
+                <p style="color: #666; margin-top: 10px;">
+                    记住：泛型让代码更灵活、更安全、更可复用！
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Recipe filling animation
+        function fillRecipe(type) {
+            const ing1 = document.getElementById('ing1');
+            const explanation = document.getElementById('recipeExplanation');
+            
+            ing1.classList.add('filled');
+            ing1.innerHTML = `<span style="color: #00b894; font-weight: bold;">${type}</span> - 已填入具体类型`;
+            
+            let desc = '';
+            switch(type) {
+                case 'int':
+                    desc = '现在这个容器只能装整数！尝试放入字符串会导致编译错误。';
+                    break;
+                case 'string':
+                    desc = '现在这个容器专门装字符串！类型安全检查已启用。';
+                    break;
+                case 'double':
+                    desc = '现在这个容器用于存储小数。精度得到保证！';
+                    break;
+            }
+            
+            explanation.innerHTML = `
+                <h4>📖 实例化完成！</h4>
+                <p>${desc}</p>
+                <p style="margin-top: 10px;"><strong>编译器行为：</strong>生成了 ${type} 类型的专属代码版本</p>
+            `;
+        }
+        
+        function resetRecipe() {
+            const ing1 = document.getElementById('ing1');
+            const explanation = document.getElementById('recipeExplanation');
+            
+            ing1.classList.remove('filled');
+            ing1.innerHTML = '<span class="placeholder-text">&lt;T&gt;</span> - 任意类型的食材';
+            
+            explanation.innerHTML = `
+                <h4>📖 当前状态</h4>
+                <p>选择一个类型来实例化这个通用容器！</p>
+            `;
+        }
+        
+        // Type instantiation animation
+        function instantiateType() {
+            const selector = document.getElementById('typeSelector');
+            const typePlaceholder = document.getElementById('typePlaceholder');
+            const actualType = document.getElementById('actualType');
+            const instantiatedBox = document.getElementById('instantiatedBox');
+            const typeLabel = document.getElementById('typeLabel');
+            const explanation = document.getElementById('instantiationExplanation');
+            
+            if (selector.value) {
+                typePlaceholder.textContent = selector.value;
+                actualType.textContent = selector.value;
+                typeLabel.textContent = selector.value;
+                typeLabel.style.display = 'block';
+                instantiatedBox.style.opacity = '1';
+                instantiatedBox.style.background = 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)';
+                
+                explanation.innerHTML = `
+                    <h4>📖 实例化过程</h4>
+                    <p>编译器将 <code>Box&lt;T&gt;</code> 中的 <code>T</code> 替换为 <strong>${selector.value}</strong></p>
+                    <p style="margin-top: 10px;"><strong>结果：</strong>生成了专属于 ${selector.value} 的 Box 类！</p>
+                `;
+            }
+        }
+        
+        function animateInstantiation() {
+            const selector = document.getElementById('typeSelector');
+            if (!selector.value) {
+                alert('请先从下拉菜单选择一个类型！');
+                return;
+            }
+            instantiateType();
+        }
+        
+        // Tab switching
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            if (tabName === 'compile') {
+                tabs[0].classList.add('active');
+                document.getElementById('compileTab').classList.add('active');
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('runtimeTab').classList.add('active');
+            }
+        }
+        
+        // C++ compile test
+        function testCppCompile(correct) {
+            const errorDiv = document.getElementById('cppError');
+            const successDiv = document.getElementById('cppSuccess');
+            
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            setTimeout(() => {
+                if (correct) {
+                    successDiv.style.display = 'block';
+                } else {
+                    errorDiv.style.display = 'block';
+                }
+            }, 300);
+        }
+        
+        // Template specialization demo
+        function showSpecialization(type) {
+            const explanation = document.getElementById('specExplanation');
+            
+            if (type === 'int') {
+                explanation.innerHTML = `
+                    <h4>📖 使用通用模板</h4>
+                    <p>对于 <code>int</code> 类型，编译器使用通用模板：</p>
+                    <div class="code-block" style="margin-top: 10px; font-size: 0.9em;">
+<pre><span class="type">Box</span>&lt;<span class="keyword">int</span>&gt; intBox;
+intBox.set(<span class="number">42</span>);
+intBox.print();  <span class="comment">// 输出: 42</span></pre>
+                    </div>
+                `;
+            } else if (type === 'string') {
+                explanation.innerHTML = `
+                    <h4>📖 使用特化版本</h4>
+                    <p>对于 <code>string</code> 类型，编译器优先使用特化版本：</p>
+                    <div class="code-block" style="margin-top: 10px; font-size: 0.9em;">
+<pre><span class="type">Box</span>&lt;<span class="type">string</span>&gt; strBox;
+strBox.set(<span class="string">"hello"</span>);
+strBox.print();  <span class="comment">// 输出: [str]hello</span></pre>
+                    </div>
+                    <p style="margin-top: 10px;"><strong>注意：</strong>输出前面多了 "[str]" 前缀，这是特化版本的定制行为！</p>
+                `;
+            }
+        }
+        
+        // Variadic template parameters
+        let paramCount = 0;
+        function addParameter(type, value) {
+            paramCount++;
+            const pack = document.getElementById('paramPack');
+            
+            if (paramCount === 1) {
+                pack.innerHTML = '';
+            }
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'param-bubble';
+            bubble.textContent = `${type}: ${value}`;
+            bubble.style.animationDelay = `${paramCount * 0.1}s`;
+            pack.appendChild(bubble);
+        }
+        
+        function clearParameters() {
+            paramCount = 0;
+            const pack = document.getElementById('paramPack');
+            pack.innerHTML = '<div class="param-bubble">点击按钮添加参数</div>';
+        }
+        
+        // Interactive playground
+        let containerData = null;
+        
+        function createContainer() {
+            const containerType = document.getElementById('containerType').value;
+            const elementType = document.getElementById('elementType').value;
+            const result = document.getElementById('playgroundResult');
+            const error = document.getElementById('playgroundError');
+            const success = document.getElementById('playgroundSuccess');
+            
+            error.style.display = 'none';
+            success.style.display = 'none';
+            
+            containerData = {
+                type: containerType,
+                element: elementType,
+                items: []
+            };
+            
+            let display = '';
+            if (containerType === 'Box') {
+                display = `Box&lt;${elementType}&gt; 容器已创建（空）`;
+            } else if (containerType === 'List') {
+                display = `List&lt;${elementType}&gt; 容器已创建（空列表）`;
+            } else if (containerType === 'Map') {
+                display = `Map&lt;${elementType}, ${elementType}&gt; 容器已创建（空映射）`;
+            }
+            
+            result.innerHTML = `<p><strong>${display}</strong></p>`;
+            
+            success.textContent = '✅ 容器创建成功！现在可以添加元素了。';
+            success.style.display = 'block';
+        }
+        
+        function addElement() {
+            if (!containerData) {
+                alert('请先创建容器！');
+                return;
+            }
+            
+            const result = document.getElementById('playgroundResult');
+            const error = document.getElementById('playgroundError');
+            const success = document.getElementById('playgroundSuccess');
+            
+            error.style.display = 'none';
+            success.style.display = 'none';
+            
+            let sampleValue = '';
+            switch(containerData.element) {
+                case 'int':
+                    sampleValue = Math.floor(Math.random() * 100);
+                    break;
+                case 'string':
+                    const words = ['hello', 'world', 'foo', 'bar'];
+                    sampleValue = `"${words[Math.floor(Math.random() * words.length)]}"`;
+                    break;
+                case 'double':
+                    sampleValue = (Math.random() * 10).toFixed(2);
+                    break;
+            }
+            
+            containerData.items.push(sampleValue);
+            
+            let display = `<strong>${containerData.type}&lt;${containerData.element}&gt;</strong><br><br>`;
+            display += '内容：<br>';
+            containerData.items.forEach((item, index) => {
+                display += `[${index}] ${item}<br>`;
+            });
+            
+            result.innerHTML = display;
+            
+            success.textContent = `✅ 成功添加元素: ${sampleValue}`;
+            success.style.display = 'block';
+        }
+        
+        function checkTypes() {
+            if (!containerData) {
+                alert('请先创建容器！');
+                return;
+            }
+            
+            const error = document.getElementById('playgroundError');
+            const success = document.getElementById('playgroundSuccess');
+            
+            error.style.display = 'none';
+            success.style.display = 'none';
+            
+            // Simulate type checking
+            if (containerData.element === 'int') {
+                error.innerHTML = '<strong>❌ 类型错误：</strong>尝试添加字符串 "hello" 到 List&lt;int&gt;';
+                error.style.display = 'block';
+            } else {
+                success.innerHTML = '<strong>✅ 类型检查通过：</strong>所有元素类型一致';
+                success.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

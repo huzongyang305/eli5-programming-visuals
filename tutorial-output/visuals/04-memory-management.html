@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: 内存是如何管理的？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .analogy-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .analogy-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .analogy-box p {
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .memory-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .memory-region {
+            background: #fafafa;
+            border-radius: 15px;
+            padding: 25px;
+            border: 3px solid #667eea;
+            position: relative;
+        }
+        
+        .memory-region h3 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .stack-area, .heap-area {
+            min-height: 300px;
+            position: relative;
+        }
+        
+        .stack-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            text-align: center;
+            animation: slideIn 0.5s ease-out;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(-30px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideOut {
+            from { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+            to { 
+                opacity: 0; 
+                transform: translateY(-30px);
+            }
+        }
+        
+        .heap-block {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in;
+            box-shadow: 0 4px 10px rgba(245, 87, 108, 0.3);
+            position: relative;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .pointer-arrow {
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+            color: #667eea;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .ref-count {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ffd700;
+            color: #333;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .slider-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .slider-container label {
+            display: block;
+            margin-bottom: 10px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 80%;
+            height: 10px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .toggle-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px;
+        }
+        
+        .toggle-switch input[type="checkbox"] {
+            width: 50px;
+            height: 25px;
+            appearance: none;
+            background: #ddd;
+            border-radius: 25px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle-switch input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .toggle-switch input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .toggle-switch input[type="checkbox"]:checked::before {
+            transform: translateX(25px);
+        }
+        
+        .explanation {
+            background: #fff9e6;
+            border: 2px solid #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .explanation h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .highlight {
+            background: yellow;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+        
+        .code-block .type {
+            color: #8be9fd;
+        }
+        
+        .code-block .string {
+            color: #f1fa8c;
+        }
+        
+        .code-block .comment {
+            color: #6272a4;
+        }
+        
+        .code-block .function {
+            color: #50fa7b;
+        }
+        
+        .gc-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .gc-overlay.active {
+            display: flex;
+        }
+        
+        .gc-animation {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 600px;
+        }
+        
+        .gc-animation h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .gc-progress {
+            width: 100%;
+            height: 30px;
+            background: #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .gc-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .leak-indicator {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .best-practices {
+            background: #e6f7ff;
+            border: 3px solid #667eea;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        
+        .best-practices h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .best-practices ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .best-practices li {
+            margin: 12px 0;
+            line-height: 1.8;
+        }
+        
+        .warning-box {
+            background: #ffe6e6;
+            border-left: 5px solid #ff6b6b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .warning-box h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .time-display {
+            text-align: center;
+            font-size: 1.2em;
+            color: #667eea;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .memory-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-card h4 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .smart-pointer-toggle {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 ELI5: 内存是如何管理的？</h1>
+        <p class="subtitle">图书馆书架类比：栈、堆和垃圾回收</p>
+        
+        <div class="analogy-box">
+            <h3>💡 生活类比：图书馆管理系统</h3>
+            <p>想象你在一个大型图书馆工作：</p>
+            <ul style="margin-left: 20px; margin-top: 10px; color: #555;">
+                <li><strong>桌面小书架（Stack）</strong>：你手边的小书架，放正在读的书。看完一本就放回去，自动清理，速度快但空间有限</li>
+                <li><strong>主书库（Heap）</strong>：图书馆的大书架，可以存放大量书籍。需要手动借书（分配）和还书（释放），灵活但容易忘记归还</li>
+                <li><strong>图书管理员（Garbage Collector）</strong>：定期检查哪些书没人借阅了，自动把它们放回仓库。但检查期间图书馆会暂停服务</li>
+            </ul>
+            <p style="margin-top: 10px;"><strong>核心问题：</strong>如何高效地管理有限的书架空间，既不浪费也不冲突？</p>
+        </div>
+        
+        <div class="memory-stats">
+            <div class="stat-card">
+                <h4>栈使用量</h4>
+                <div class="value" id="stackUsage">0 KB</div>
+            </div>
+            <div class="stat-card">
+                <h4>堆使用量</h4>
+                <div class="value" id="heapUsage">0 KB</div>
+            </div>
+            <div class="stat-card">
+                <h4>泄漏内存</h4>
+                <div class="value" id="leakedMemory">0 KB</div>
+            </div>
+        </div>
+        
+        <div class="memory-layout">
+            <div class="memory-region">
+                <h3>📚 栈（Stack）- 桌面小书架</h3>
+                <div class="stack-area" id="stackArea">
+                    <div style="text-align: center; color: #999; padding: 50px;">
+                        点击"压入变量"开始演示
+                    </div>
+                </div>
+                <div class="controls" style="margin-top: 20px;">
+                    <button onclick="pushToStack()">⬇️ 压入变量</button>
+                    <button onclick="popFromStack()">⬆️ 弹出变量</button>
+                </div>
+            </div>
+            
+            <div class="memory-region">
+                <h3>🏛️ 堆（Heap）- 主书库</h3>
+                <div class="smart-pointer-toggle">
+                    <span><strong>启用智能指针（Smart Pointers）</strong></span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="smartPointerToggle" onchange="toggleSmartPointers()">
+                        <label for="smartPointerToggle"></label>
+                    </div>
+                </div>
+                <div class="heap-area" id="heapArea">
+                    <div style="text-align: center; color: #999; padding: 50px;">
+                        点击"分配对象"开始演示
+                    </div>
+                </div>
+                <div class="controls" style="margin-top: 20px;">
+                    <button onclick="allocateOnHeap()">➕ 分配对象</button>
+                    <button onclick="deallocateFromHeap()">➖ 释放对象</button>
+                    <button onclick="simulateLeak()">⚠️ 模拟泄漏</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slider-container">
+            <label>⏱️ 程序执行时间轴（拖动观察内存变化）</label>
+            <input type="range" id="timeSlider" min="0" max="100" value="0" oninput="updateTimeSimulation(this.value)">
+            <div class="time-display" id="timeDisplay">时间: 0%</div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="runGC()">🗑️ 触发垃圾回收</button>
+            <button onclick="resetMemory()">🔄 重置所有内存</button>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <h4>📖 当前状态说明</h4>
+            <p>开始探索内存管理！尝试在栈和堆上分配变量。</p>
+        </div>
+        
+        <div class="warning-box" id="leakWarning" style="display: none;">
+            <h4>⚠️ 检测到内存泄漏！</h4>
+            <p>有些分配的内存没有被正确释放，就像借了书却忘记归还！这会导致程序占用越来越多内存，最终可能崩溃。</p>
+            <div class="leak-indicator" id="leakDetails"></div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">💻 代码对比：不同语言的内存管理</h3>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">C++: 原始指针 vs 智能指针</h4>
+            <div class="code-block">
+<span class="comment">// ❌ 原始指针 - 容易泄漏</span>
+<span class="type">void</span> <span class="function">oldWay</span>() {
+    <span class="type">int</span>* ptr = <span class="keyword">new</span> <span class="type">int</span>(42);  <span class="comment">// 分配内存</span>
+    <span class="comment">// ... 使用 ptr ...</span>
+    <span class="comment">// 如果忘记 delete，就会泄漏！</span>
+    <span class="keyword">delete</span> ptr;  <span class="comment">// 必须手动释放</span>
+}
+
+<span class="comment">// ✅ unique_ptr - 自动管理（独占所有权）</span>
+<span class="type">void</span> <span class="function">modernWay1</span>() {
+    <span class="keyword">auto</span> ptr = std::<span class="function">make_unique</span>&lt;<span class="type">int</span>&gt;(42);
+    <span class="comment">// 离开作用域时自动释放！</span>
+}
+
+<span class="comment">// ✅ shared_ptr - 引用计数（共享所有权）</span>
+<span class="type">void</span> <span class="function">modernWay2</span>() {
+    <span class="keyword">auto</span> ptr1 = std::<span class="function">make_shared</span>&lt;<span class="type">int</span>&gt;(42);
+    <span class="keyword">auto</span> ptr2 = ptr1;  <span class="comment">// 引用计数 +1</span>
+    <span class="comment">// 最后一个引用离开时自动释放</span>
+}
+            </div>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">Java: 自动垃圾回收</h4>
+            <div class="code-block">
+<span class="comment">// Java 中无需手动管理内存</span>
+<span class="keyword">public void</span> <span class="function">javaWay</span>() {
+    Object obj = <span class="keyword">new</span> Object();  <span class="comment">// 自动分配</span>
+    <span class="comment">// ... 使用 obj ...</span>
+    <span class="comment">// JVM 的 GC 会自动回收不再使用的对象</span>
+}
+
+<span class="comment">// ⚠️ 但仍需注意避免内存泄漏</span>
+<span class="keyword">List</span>&lt;Object&gt; cache = <span class="keyword">new</span> ArrayList&lt;&gt;();
+<span class="keyword">public void</span> <span class="function">addToCache</span>(Object item) {
+    cache.<span class="function">add</span>(item);  <span class="comment">// 如果不清理，会一直增长！</span>
+}
+            </div>
+            
+            <h4 style="color: #667eea; margin: 20px 0 10px;">C++ RAII 模式（资源获取即初始化）</h4>
+            <div class="code-block">
+<span class="comment">// RAII: 利用析构函数自动释放资源</span>
+<span class="keyword">class</span> <span class="type">FileHandler</span> {
+    FILE* file;
+<span class="keyword">public</span>:
+    FileHandler(<span class="keyword">const</span> <span class="type">char</span>* filename) {
+        file = <span class="function">fopen</span>(filename, <span class="string">"r"</span>);
+    }
+    ~FileHandler() {
+        <span class="function">fclose</span>(file);  <span class="comment">// 自动关闭文件</span>
+    }
+};
+
+<span class="comment">// 使用示例</span>
+<span class="type">void</span> <span class="function">readFile</span>() {
+    FileHandler handler(<span class="string">"data.txt"</span>);
+    <span class="comment">// 即使抛出异常，文件也会被关闭！</span>
+}
+            </div>
+        </div>
+        
+        <div class="visual-area">
+            <h3 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚡ 内存管理方式对比</h3>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>特性</th>
+                        <th>手动管理（C/C++）</th>
+                        <th>自动管理（Java/Python）</th>
+                        <th>混合模式（Rust）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>性能</strong></td>
+                        <td>⭐⭐⭐ 最高（无GC开销）</td>
+                        <td>⭐⭐ 中等（GC暂停）</td>
+                        <td>⭐⭐⭐ 高（编译期检查）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>安全性</strong></td>
+                        <td>⭐ 低（容易出错）</td>
+                        <td>⭐⭐⭐ 高（自动回收）</td>
+                        <td>⭐⭐⭐ 高（所有权系统）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>开发效率</strong></td>
+                        <td>⭐ 低（需仔细管理）</td>
+                        <td>⭐⭐⭐ 高（无需关心）</td>
+                        <td>⭐⭐ 中等（学习曲线陡）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>常见Bug</strong></td>
+                        <td>悬空指针、双重释放、内存泄漏</td>
+                        <td>内存泄漏（引用未清除）</td>
+                        <td>几乎无（编译器保证）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>适用场景</strong></td>
+                        <td>系统编程、游戏引擎、嵌入式</td>
+                        <td>Web应用、企业软件、移动App</td>
+                        <td>系统编程、并发应用</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="best-practices">
+            <h3>✅ 内存管理最佳实践</h3>
+            <ul>
+                <li><strong>始终初始化指针</strong>：未初始化的指针指向随机地址，可能导致程序崩溃。使用 nullptr 或智能指针</li>
+                <li><strong>优先使用智能指针</strong>：现代 C++ 中，unique_ptr 和 shared_ptr 能自动管理内存，避免大部分泄漏</li>
+                <li><strong>避免循环引用</strong>：shared_ptr 的循环引用会导致内存无法释放，使用 weak_ptr 打破循环</li>
+                <li><strong>遵循 RAII 原则</strong>：资源获取即初始化，利用析构函数自动释放资源（文件、网络连接等）</li>
+                <li><strong>监控内存使用</strong>：使用工具如 Valgrind、AddressSanitizer 检测泄漏和越界访问</li>
+                <li><strong>理解 GC 机制</strong>：即使在 Java 中，也要注意避免持有不必要的引用导致 GC 无法回收</li>
+                <li><strong>及时释放大对象</strong>：对于大型数据结构，使用完后显式设置为 null 帮助 GC 识别</li>
+            </ul>
+        </div>
+        
+        <div class="explanation" style="background: #e6f3ff; border-color: #667eea;">
+            <h4 style="color: #667eea;">🎯 核心要点总结</h4>
+            <ul>
+                <li><strong>栈（Stack）</strong>：自动管理，速度快，适合局部变量和函数调用。像桌面小书架，用完就放回</li>
+                <li><strong>堆（Heap）</strong>：手动或自动管理，灵活但复杂。像主书库，需要借还手续，容易忘记归还</li>
+                <li><strong>垃圾回收（GC）</strong>：自动清理无用对象，但会有暂停。像图书管理员定期检查，检查时图书馆暂停</li>
+                <li><strong>智能指针</strong>：C++ 的现代解决方案，结合手动控制的灵活性和自动管理的安全性</li>
+                <li><strong>内存泄漏</strong>：分配的内存未被释放，会逐渐耗尽资源。像借书不还，书架越来越满</li>
+                <li><strong>选择策略</strong>：根据应用场景选择合适的内存管理方式，没有银弹</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="gc-overlay" id="gcOverlay">
+        <div class="gc-animation">
+            <h3>🗑️ 垃圾回收进行中...</h3>
+            <p>正在扫描堆内存，标记并清理未使用的对象</p>
+            <div class="gc-progress">
+                <div class="gc-progress-bar" id="gcProgressBar">0%</div>
+            </div>
+            <p style="color: #666; font-size: 0.9em;">注意：GC 期间程序会暂停（Stop-the-world）</p>
+        </div>
+    </div>
+    
+    <script>
+        let stackItems = [];
+        let heapBlocks = [];
+        let leakedBlocks = [];
+        let smartPointersEnabled = false;
+        let variableCounter = 0;
+        let timeValue = 0;
+        
+        function updateStats() {
+            const stackSize = stackItems.length * 4;
+            const heapSize = heapBlocks.length * 16 + leakedBlocks.length * 16;
+            const leakedSize = leakedBlocks.length * 16;
+            
+            document.getElementById('stackUsage').textContent = stackSize + ' KB';
+            document.getElementById('heapUsage').textContent = heapSize + ' KB';
+            document.getElementById('leakedMemory').textContent = leakedSize + ' KB';
+            
+            if (leakedBlocks.length > 0) {
+                document.getElementById('leakWarning').style.display = 'block';
+                document.getElementById('leakDetails').textContent = 
+                    `发现 ${leakedBlocks.length} 个泄漏的内存块，共 ${leakedSize} KB 未释放`;
+            } else {
+                document.getElementById('leakWarning').style.display = 'none';
+            }
+        }
+        
+        function pushToStack() {
+            variableCounter++;
+            const varName = `var${variableCounter}`;
+            const varValue = Math.floor(Math.random() * 100);
+            stackItems.push({ name: varName, value: varValue });
+            
+            renderStack();
+            updateExplanation('stackPush', varName, varValue);
+            updateStats();
+        }
+        
+        function popFromStack() {
+            if (stackItems.length === 0) {
+                alert('栈为空！');
+                return;
+            }
+            
+            const popped = stackItems.pop();
+            renderStack();
+            updateExplanation('stackPop', popped.name);
+            updateStats();
+        }
+        
+        function renderStack() {
+            const area = document.getElementById('stackArea');
+            area.innerHTML = '';
+            
+            if (stackItems.length === 0) {
+                area.innerHTML = '<div style="text-align: center; color: #999; padding: 50px;">栈为空</div>';
+                return;
+            }
+            
+            stackItems.slice().reverse().forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'stack-item';
+                div.innerHTML = `
+                    <div style="font-weight: bold; font-size: 1.1em;">${item.name}</div>
+                    <div style="font-size: 0.9em; margin-top: 5px;">值: ${item.value}</div>
+                    <div style="font-size: 0.7em; margin-top: 5px; opacity: 0.8;">地址: 0x${(0x7FFF0000 - index * 8).toString(16).toUpperCase()}</div>
+                `;
+                area.appendChild(div);
+            });
+            
+            const label = document.createElement('div');
+            label.style.textAlign = 'center';
+            label.style.color = '#667eea';
+            label.style.marginTop = '10px';
+            label.style.fontWeight = 'bold';
+            label.textContent = '▼ 栈顶（最后进入）';
+            area.appendChild(label);
+        }
+        
+        function allocateOnHeap() {
+            variableCounter++;
+            const objId = `obj${variableCounter}`;
+            const size = Math.floor(Math.random() * 50) + 10;
+            
+            const block = {
+                id: objId,
+                size: size,
+                refCount: 1,
+                isLeaked: false
+            };
+            
+            heapBlocks.push(block);
+            renderHeap();
+            updateExplanation('heapAlloc', objId, size);
+            updateStats();
+        }
+        
+        function deallocateFromHeap() {
+            if (heapBlocks.length === 0) {
+                alert('堆上没有可释放的对象！');
+                return;
+            }
+            
+            const lastBlock = heapBlocks[heapBlocks.length - 1];
+            
+            if (smartPointersEnabled) {
+                lastBlock.refCount--;
+                if (lastBlock.refCount <= 0) {
+                    heapBlocks.pop();
+                    updateExplanation('smartPtrDealloc', lastBlock.id);
+                } else {
+                    updateExplanation('smartPtrRefCount', lastBlock.id, lastBlock.refCount);
+                }
+            } else {
+                heapBlocks.pop();
+                updateExplanation('heapDealloc', lastBlock.id);
+            }
+            
+            renderHeap();
+            updateStats();
+        }
+        
+        function simulateLeak() {
+            variableCounter++;
+            const leakId = `leak${variableCounter}`;
+            const size = Math.floor(Math.random() * 30) + 20;
+            
+            const leakBlock = {
+                id: leakId,
+                size: size,
+                refCount: 0,
+                isLeaked: true
+            };
+            
+            leakedBlocks.push(leakBlock);
+            heapBlocks.push(leakBlock);
+            renderHeap();
+            updateExplanation('memoryLeak', leakId, size);
+            updateStats();
+        }
+        
+        function renderHeap() {
+            const area = document.getElementById('heapArea');
+            area.innerHTML = '';
+            
+            if (heapBlocks.length === 0 && leakedBlocks.length === 0) {
+                area.innerHTML = '<div style="text-align: center; color: #999; padding: 50px;">堆为空</div>';
+                return;
+            }
+            
+            heapBlocks.forEach((block, index) => {
+                const div = document.createElement('div');
+                div.className = 'heap-block';
+                
+                if (block.isLeaked) {
+                    div.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)';
+                }
+                
+                let html = `
+                    <div style="font-weight: bold; font-size: 1.1em;">${block.id}</div>
+                    <div style="font-size: 0.9em; margin-top: 5px;">大小: ${block.size} KB</div>
+                `;
+                
+                if (smartPointersEnabled && !block.isLeaked) {
+                    html += `<div class="ref-count">${block.refCount}</div>`;
+                    html += '<div style="font-size: 0.7em; margin-top: 5px;">引用计数</div>';
+                }
+                
+                div.innerHTML = html;
+                area.appendChild(div);
+            });
+        }
+        
+        function toggleSmartPointers() {
+            smartPointersEnabled = document.getElementById('smartPointerToggle').checked;
+            renderHeap();
+            updateExplanation(smartPointersEnabled ? 'smartPtrEnable' : 'smartPtrDisable');
+        }
+        
+        function runGC() {
+            const overlay = document.getElementById('gcOverlay');
+            const progressBar = document.getElementById('gcProgressBar');
+            
+            overlay.classList.add('active');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+                progressBar.textContent = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    setTimeout(() => {
+                        leakedBlocks = [];
+                        heapBlocks = heapBlocks.filter(b => !b.isLeaked);
+                        
+                        overlay.classList.remove('active');
+                        progressBar.style.width = '0%';
+                        progressBar.textContent = '0%';
+                        
+                        renderHeap();
+                        updateExplanation('gcComplete');
+                        updateStats();
+                    }, 500);
+                }
+            }, 200);
+        }
+        
+        function updateTimeSimulation(value) {
+            timeValue = parseInt(value);
+            document.getElementById('timeDisplay').textContent = `时间: ${timeValue}%`;
+            
+            if (timeValue < 30) {
+                updateExplanation('timeEarly');
+            } else if (timeValue < 60) {
+                updateExplanation('timeMid');
+            } else if (timeValue < 90) {
+                updateExplanation('timeLate');
+            } else {
+                updateExplanation('timeEnd');
+            }
+        }
+        
+        function resetMemory() {
+            stackItems = [];
+            heapBlocks = [];
+            leakedBlocks = [];
+            variableCounter = 0;
+            timeValue = 0;
+            smartPointersEnabled = false;
+            
+            document.getElementById('smartPointerToggle').checked = false;
+            document.getElementById('timeSlider').value = 0;
+            
+            renderStack();
+            renderHeap();
+            updateStats();
+            updateExplanation('reset');
+        }
+        
+        function updateExplanation(action, param1 = null, param2 = null) {
+            const expl = document.getElementById('explanation');
+            let html = '<h4>📖 当前状态说明</h4>';
+            
+            switch(action) {
+                case 'stackPush':
+                    html += `<p>✅ 将变量 <strong>${param1}</strong>（值=${param2}）压入栈</p>`;
+                    html += '<ul>';
+                    html += '<li>栈是 LIFO（后进先出）结构</li>';
+                    html += '<li>变量在函数结束时自动释放</li>';
+                    html += '<li>速度非常快，因为只是移动栈指针</li>';
+                    html += '<li>类似把书放在桌面小书架上</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'stackPop':
+                    html += `<p>✅ 从栈顶弹出变量 <strong>${param1}</strong></p>`;
+                    html += '<ul>';
+                    html += '<li>函数返回时，局部变量自动清理</li>';
+                    html += '<li>无需手动管理，非常安全</li>';
+                    html += '<li>类似看完书后放回原处</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'heapAlloc':
+                    html += `<p>✅ 在堆上分配对象 <strong>${param1}</strong>（${param2} KB）</p>`;
+                    html += '<ul>';
+                    html += '<li>堆内存需要手动管理（C++）或自动回收（Java）</li>';
+                    html += '<li>对象生命周期由程序员或GC决定</li>';
+                    html += '<li>类似从主书库借书，需要登记</li>';
+                    if (!smartPointersEnabled) {
+                        html += '<li><strong>⚠️ 警告：</strong>如果忘记释放，会造成内存泄漏！</li>';
+                    }
+                    html += '</ul>';
+                    break;
+                    
+                case 'heapDealloc':
+                    html += `<p>✅ 释放堆对象 <strong>${param1}</strong></p>`;
+                    html += '<ul>';
+                    html += '<li>在 C++ 中使用 delete 释放内存</li>';
+                    html += '<li>必须确保只释放一次，避免双重释放</li>';
+                    html += '<li>类似还书给图书馆</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'smartPtrDealloc':
+                    html += `<p>✅ 智能指针自动释放对象 <strong>${param1}</strong></p>`;
+                    html += '<ul>';
+                    html += '<li>引用计数降为 0，自动释放内存</li>';
+                    html += '<li>无需手动调用 delete，更安全</li>';
+                    html += '<li>unique_ptr: 独占所有权，离开作用域即释放</li>';
+                    html += '<li>shared_ptr: 共享所有权，最后一个引用消失时释放</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'smartPtrRefCount':
+                    html += `<p>📊 对象 <strong>${param1}</strong> 的引用计数: ${param2}</p>`;
+                    html += '<ul>';
+                    html += '<li>还有引用指向该对象，暂不释放</li>';
+                    html += '<li>当计数降为 0 时才会真正释放</li>';
+                    html += '<li>类似多个人借阅同一本书</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'smartPtrEnable':
+                    html += '<p>✅ 已启用智能指针模式</p>';
+                    html += '<ul>';
+                    html += '<li>现在分配的对象会显示引用计数</li>';
+                    html += '<li>释放时会检查引用计数</li>';
+                    html += '<li>更安全，但仍需注意循环引用问题</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'smartPtrDisable':
+                    html += '<p>❌ 已禁用智能指针模式</p>';
+                    html += '<ul>';
+                    html += '<li>回到原始指针模式</li>';
+                    html += '<li>需要手动管理内存释放</li>';
+                    html += '<li>更容易出现泄漏和悬空指针</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'memoryLeak':
+                    html += `<p>⚠️ 模拟内存泄漏：对象 <strong>${param1}</strong>（${param2} KB）未被释放</p>`;
+                    html += '<ul>';
+                    html += '<li>这块内存再也无法访问，但仍在占用空间</li>';
+                    html += '<li>类似借书后忘记归还，书架空间越来越少</li>';
+                    html += '<li>长期运行会导致程序内存耗尽</li>';
+                    html += '<li>点击"触发垃圾回收"可以清理泄漏的内存（仅适用于有GC的语言）</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'gcComplete':
+                    html += '<p>✅ 垃圾回收完成！</p>';
+                    html += '<ul>';
+                    html += '<li>已扫描整个堆内存</li>';
+                    html += '<li>标记阶段：找出所有可达对象</li>';
+                    html += '<li>清除阶段：回收不可达对象的内存</li>';
+                    html += '<li>压缩阶段：整理内存碎片（可选）</li>';
+                    html += '<li><strong>注意：</strong>GC 期间程序会暂停（Stop-the-world）</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'timeEarly':
+                    html += '<p>⏱️ 程序启动阶段</p>';
+                    html += '<ul>';
+                    html += '<li>内存使用量较低</li>';
+                    html += '<li>主要分配必要的初始化对象</li>';
+                    html += '<li>栈上存放局部变量和函数参数</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'timeMid':
+                    html += '<p>⏱️ 程序运行中期</p>';
+                    html += '<ul>';
+                    html += '<li>内存使用量逐渐增加</li>';
+                    html += '<li>动态分配更多对象处理业务逻辑</li>';
+                    html += '<li>如果没有正确释放，可能出现轻微泄漏</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'timeLate':
+                    html += '<p>⏱️ 程序运行后期</p>';
+                    html += '<ul>';
+                    html += '<li>内存使用量较高</li>';
+                    html += '<li>可能存在明显的内存泄漏</li>';
+                    html += '<li>GC 频率增加（如果有GC）</li>';
+                    html += '<li>性能可能开始下降</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'timeEnd':
+                    html += '<p>⏱️ 程序即将结束</p>';
+                    html += '<ul>';
+                    html += '<li>应该释放所有分配的内存</li>';
+                    html += '<li>C++: 调用析构函数和 delete</li>';
+                    html += '<li>Java: GC 会回收所有不可达对象</li>';
+                    html += '<li>操作系统会回收进程的所有内存</li>';
+                    html += '</ul>';
+                    break;
+                    
+                case 'reset':
+                    html += '<p>🔄 所有内存已重置</p>';
+                    break;
+            }
+            
+            expl.innerHTML = html;
+        }
+        
+        // 初始化
+        renderStack();
+        renderHeap();
+        updateStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI5: SOLID设计原则是什么？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .analogy-box {
+            background: #f0f4ff;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        
+        .analogy-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .analogy-box p {
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .principle-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .principle-section:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+        
+        .principle-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .principle-title {
+            color: #667eea;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .principle-letter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .toggle-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .toggle-btn {
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .design-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .bad-design, .good-design {
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .bad-design {
+            background: #ffe6e6;
+            border: 2px solid #ff6b6b;
+        }
+        
+        .good-design {
+            background: #e6ffe6;
+            border: 2px solid #51cf66;
+        }
+        
+        .design-label {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .bad-design .design-label {
+            color: #ff6b6b;
+            border: 2px solid #ff6b6b;
+        }
+        
+        .good-design .design-label {
+            color: #51cf66;
+            border: 2px solid #51cf66;
+        }
+        
+        .dependency-diagram {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            min-height: 200px;
+            position: relative;
+        }
+        
+        .class-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px;
+            display: inline-block;
+            min-width: 120px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+            transition: transform 0.3s;
+        }
+        
+        .class-box:hover {
+            transform: translateY(-5px);
+        }
+        
+        .arrow-line {
+            position: absolute;
+            height: 2px;
+            background: #667eea;
+            transform-origin: left center;
+        }
+        
+        .arrow-head {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #667eea;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        
+        .coupling-indicator {
+            position: absolute;
+            background: rgba(255, 107, 107, 0.8);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .arrow-line:hover + .coupling-indicator,
+        .coupling-indicator:hover {
+            opacity: 1;
+        }
+        
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .code-example.visible {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+        
+        .code-block .type {
+            color: #8be9fd;
+        }
+        
+        .code-block .string {
+            color: #f1fa8c;
+        }
+        
+        .code-block .comment {
+            color: #6272a4;
+        }
+        
+        .refactor-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            margin: 10px 5px;
+        }
+        
+        .refactor-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .benefit-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .benefit-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .benefit-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .quiz-container {
+            background: #fff9e6;
+            border: 2px solid #ffd700;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .quiz-question {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .quiz-option {
+            padding: 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .quiz-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .quiz-option.correct {
+            border-color: #51cf66;
+            background: #e6ffe6;
+        }
+        
+        .quiz-option.wrong {
+            border-color: #ff6b6b;
+            background: #ffe6e6;
+        }
+        
+        .tradeoffs-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tradeoffs-list li {
+            padding: 10px 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #ffa94d;
+        }
+        
+        .highlight {
+            background: yellow;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .step.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            animation: bounce 0.5s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        .restaurant-analogy {
+            background: #fff5f5;
+            border: 2px solid #ff6b6b;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .chef-station {
+            display: inline-block;
+            background: white;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            text-align: center;
+            min-width: 100px;
+        }
+        
+        .chef-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        
+        .tangled-lines {
+            position: relative;
+            height: 150px;
+            margin: 20px 0;
+        }
+        
+        .tangle-line {
+            position: absolute;
+            height: 2px;
+            background: #ff6b6b;
+            opacity: 0.6;
+        }
+        
+        .clean-separation {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+        
+        .separated-box {
+            background: #e6ffe6;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #51cf66;
+            text-align: center;
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍳 ELI5: SOLID设计原则是什么？</h1>
+        <p class="subtitle">用餐厅厨房理解五大设计原则</p>
+        
+        <div class="analogy-box">
+            <h3>💡 生活类比：餐厅厨房组织</h3>
+            <p>想象你在经营一家繁忙的餐厅：</p>
+            <ul style="margin-left: 20px; margin-top: 10px; color: #555;">
+                <li><strong>SRP（单一职责）</strong>：每个厨师专精一个领域（副厨、糕点师、烧烤师傅）</li>
+                <li><strong>OCP（开闭原则）</strong>：菜单可以添加新菜品，无需改变厨房布局</li>
+                <li><strong>LSP（里氏替换）</strong>：任何替代食材都能在食谱中正常工作</li>
+                <li><strong>ISP（接口隔离）</strong>：厨师只需要自己工作站的工具，不需要整个厨房的工具</li>
+                <li><strong>DIP（依赖倒置）</strong>：厨房向供应商订购，而不是指定具体农场</li>
+            </ul>
+        </div>
+        
+        <!-- SRP Section -->
+        <div class="principle-section" id="srp-section">
+            <div class="principle-header">
+                <div class="principle-title">S - 单一职责原则 (SRP)</div>
+                <div class="principle-letter">S</div>
+            </div>
+            
+            <div class="restaurant-analogy">
+                <h4>👨‍🍳 餐厅类比</h4>
+                <p><strong>错误做法：</strong>一个厨师负责切菜、炒菜、摆盘、收银、清洁...</p>
+                <p><strong>正确做法：</strong></p>
+                <div class="chef-station">
+                    <div class="chef-icon">🥗</div>
+                    <div>沙拉厨师</div>
+                </div>
+                <div class="chef-station">
+                    <div class="chef-icon">🍰</div>
+                    <div>糕点厨师</div>
+                </div>
+                <div class="chef-station">
+                    <div class="chef-icon">🔥</div>
+                    <div>烧烤厨师</div>
+                </div>
+            </div>
+            
+            <div class="toggle-container">
+                <button class="toggle-btn active" onclick="toggleDesign('srp', 'bad')">❌ 违反SRP</button>
+                <button class="toggle-btn" onclick="toggleDesign('srp', 'good')">✅ 遵循SRP</button>
+                <button class="refactor-btn" onclick="showCode('srp')">💻 查看代码示例</button>
+            </div>
+            
+            <div class="design-comparison">
+                <div class="bad-design" id="srp-bad">
+                    <div class="design-label">糟糕设计</div>
+                    <div class="class-box" style="width: 200px;">
+                        <div>用户管理类</div>
+                        <small>处理数据+验证+存储</small>
+                    </div>
+                    <div class="tangled-lines">
+                        <div class="tangle-line" style="top: 30px; left: 20px; width: 150px; transform: rotate(15deg);"></div>
+                        <div class="tangle-line" style="top: 50px; left: 30px; width: 140px; transform: rotate(-10deg);"></div>
+                        <div class="tangle-line" style="top: 70px; left: 25px; width: 145px; transform: rotate(5deg);"></div>
+                    </div>
+                    <p><strong>问题：</strong>一个类承担太多职责，修改任何功能都可能影响其他功能</p>
+                </div>
+                
+                <div class="good-design" id="srp-good" style="display: none;">
+                    <div class="design-label">良好设计</div>
+                    <div class="clean-separation">
+                        <div class="separated-box">
+                            <div>User</div>
+                            <small>数据模型</small>
+                        </div>
+                        <div class="separated-box">
+                            <div>UserValidator</div>
+                            <small>验证逻辑</small>
+                        </div>
+                        <div class="separated-box">
+                            <div>UserRepository</div>
+                            <small>数据存储</small>
+                        </div>
+                    </div>
+                    <p><strong>优势：</strong>每个类只负责一件事，易于测试和维护</p>
+                </div>
+            </div>
+            
+            <div class="code-example" id="srp-code">
+                <div class="code-block">
+<span class="comment">// ❌ 违反SRP - 上帝类</span>
+<span class="keyword">class</span> <span class="type">User</span> {
+    <span class="keyword">private</span> String name;
+    <span class="keyword">private</span> String email;
+    
+    <span class="comment">// 数据操作</span>
+    <span class="keyword">public void</span> saveToDatabase() { ... }
+    
+    <span class="comment">// 验证逻辑</span>
+    <span class="keyword">public boolean</span> validateEmail() { ... }
+    
+    <span class="comment">// 业务逻辑</span>
+    <span class="keyword">public void</span> sendWelcomeEmail() { ... }
+}
+
+<span class="comment">// ✅ 遵循SRP - 职责分离</span>
+<span class="keyword">class</span> <span class="type">User</span> {
+    <span class="keyword">private</span> String name;
+    <span class="keyword">private</span> String email;
+    <span class="comment">// 只包含数据和基本getter/setter</span>
+}
+
+<span class="keyword">class</span> <span class="type">UserValidator</span> {
+    <span class="keyword">public boolean</span> isValidEmail(String email) { ... }
+    <span class="keyword">public boolean</span> isValidName(String name) { ... }
+}
+
+<span class="keyword">class</span> <span class="type">UserRepository</span> {
+    <span class="keyword">public void</span> save(User user) { ... }
+    <span class="keyword">public</span> User findById(<span class="type">int</span> id) { ... }
+}
+                </div>
+            </div>
+        </div>
+        
+        <!-- OCP Section -->
+        <div class="principle-section" id="ocp-section">
+            <div class="principle-header">
+                <div class="principle-title">O - 开闭原则 (OCP)</div>
+                <div class="principle-letter">O</div>
+            </div>
+            
+            <div class="restaurant-analogy">
+                <h4>📋 餐厅类比</h4>
+                <p><strong>错误做法：</strong>每次添加新菜品都要重新装修厨房</p>
+                <p><strong>正确做法：</strong>厨房布局固定，只需在菜单上添加新菜品即可</p>
+                <div style="margin-top: 10px;">
+                    <div class="chef-station">
+                        <div class="chef-icon">📝</div>
+                        <div>旧菜单</div>
+                        <small>披萨、意面</small>
+                    </div>
+                    <div style="font-size: 2em; margin: 0 10px;">➕</div>
+                    <div class="chef-station">
+                        <div class="chef-icon">✨</div>
+                        <div>新增菜品</div>
+                        <small>寿司、牛排</small>
+                    </div>
+                    <div style="font-size: 2em; margin: 0 10px;">=</div>
+                    <div class="chef-station">
+                        <div class="chef-icon">🎉</div>
+                        <div>新菜单</div>
+                        <small>所有菜品</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toggle-container">
+                <button class="toggle-btn active" onclick="toggleDesign('ocp', 'bad')">❌ 违反OCP</button>
+                <button class="toggle-btn" onclick="toggleDesign('ocp', 'good')">✅ 遵循OCP</button>
+                <button class="refactor-btn" onclick="showCode('ocp')">💻 查看代码示例</button>
+            </div>
+            
+            <div class="design-comparison">
+                <div class="bad-design" id="ocp-bad">
+                    <div class="design-label">糟糕设计</div>
+                    <div class="class-box" style="width: 250px;">
+                        <div>PaymentProcessor</div>
+                        <small>if-else判断支付方式</small>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div class="class-box" style="background: #ff6b6b;">支付宝支付</div>
+                        <div class="class-box" style="background: #ff6b6b;">微信支付</div>
+                        <div class="class-box" style="background: #ff6b6b;">信用卡支付</div>
+                    </div>
+                    <p><strong>问题：</strong>添加新支付方式需要修改现有代码，容易引入bug</p>
+                </div>
+                
+                <div class="good-design" id="ocp-good" style="display: none;">
+                    <div class="design-label">良好设计</div>
+                    <div class="class-box" style="background: #51cf66;">
+                        <div>PaymentStrategy (接口)</div>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; justify-content: space-around;">
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>AlipayStrategy</div>
+                        </div>
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>WechatStrategy</div>
+                        </div>
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>CreditCardStrategy</div>
+                        </div>
+                        <div class="class-box" style="background: #ffd700; color: #333;">
+                            <div>+新支付方式</div>
+                        </div>
+                    </div>
+                    <p><strong>优势：</strong>添加新支付方式只需实现接口，无需修改现有代码</p>
+                </div>
+            </div>
+            
+            <div class="code-example" id="ocp-code">
+                <div class="code-block">
+<span class="comment">// ❌ 违反OCP - 硬编码判断</span>
+<span class="keyword">class</span> <span class="type">PaymentProcessor</span> {
+    <span class="keyword">public void</span> processPayment(String type, <span class="type">double</span> amount) {
+        <span class="keyword">if</span> (type.equals(<span class="string">"alipay"</span>)) {
+            <span class="comment">// 支付宝逻辑</span>
+        } <span class="keyword">else if</span> (type.equals(<span class="string">"wechat"</span>)) {
+            <span class="comment">// 微信逻辑</span>
+        } <span class="keyword">else if</span> (type.equals(<span class="string">"creditcard"</span>)) {
+            <span class="comment">// 信用卡逻辑</span>
+        }
+        <span class="comment">// 每添加新支付方式都要修改这里！</span>
+    }
+}
+
+<span class="comment">// ✅ 遵循OCP - 策略模式</span>
+<span class="keyword">interface</span> <span class="type">PaymentStrategy</span> {
+    <span class="keyword">void</span> pay(<span class="type">double</span> amount);
+}
+
+<span class="keyword">class</span> <span class="type">AlipayStrategy</span> <span class="keyword">implements</span> <span class="type">PaymentStrategy</span> {
+    <span class="keyword">public void</span> pay(<span class="type">double</span> amount) {
+        <span class="comment">// 支付宝实现</span>
+    }
+}
+
+<span class="keyword">class</span> <span class="type">PaymentProcessor</span> {
+    <span class="keyword">private</span> PaymentStrategy strategy;
+    
+    <span class="keyword">public void</span> setStrategy(PaymentStrategy strategy) {
+        <span class="keyword">this</span>.strategy = strategy;
+    }
+    
+    <span class="keyword">public void</span> processPayment(<span class="type">double</span> amount) {
+        strategy.pay(amount);  <span class="comment">// 无需修改</span>
+    }
+}
+                </div>
+            </div>
+        </div>
+        
+        <!-- LSP Section -->
+        <div class="principle-section" id="lsp-section">
+            <div class="principle-header">
+                <div class="principle-title">L - 里氏替换原则 (LSP)</div>
+                <div class="principle-letter">L</div>
+            </div>
+            
+            <div class="restaurant-analogy">
+                <h4>🥘 餐厅类比</h4>
+                <p><strong>错误做法：</strong>用巧克力代替盐，虽然都是"调味品"但行为完全不同</p>
+                <p><strong>正确做法：</strong>海盐可以代替普通盐，因为它们行为一致（都是咸味调味品）</p>
+                <div style="margin-top: 10px;">
+                    <div class="chef-station">
+                        <div class="chef-icon">🧂</div>
+                        <div>普通盐</div>
+                        <small>咸味</small>
+                    </div>
+                    <div style="font-size: 2em; margin: 0 10px;">✅ 可替换</div>
+                    <div class="chef-station">
+                        <div class="chef-icon">🌊</div>
+                        <div>海盐</div>
+                        <small>也是咸味</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toggle-container">
+                <button class="toggle-btn active" onclick="toggleDesign('lsp', 'bad')">❌ 违反LSP</button>
+                <button class="toggle-btn" onclick="toggleDesign('lsp', 'good')">✅ 遵循LSP</button>
+                <button class="refactor-btn" onclick="showCode('lsp')">💻 查看代码示例</button>
+            </div>
+            
+            <div class="design-comparison">
+                <div class="bad-design" id="lsp-bad">
+                    <div class="design-label">糟糕设计</div>
+                    <div class="class-box" style="width: 150px;">
+                        <div>Rectangle</div>
+                    </div>
+                    <div style="margin: 10px 0;">⬇️ 继承</div>
+                    <div class="class-box" style="background: #ff6b6b; width: 150px;">
+                        <div>Square</div>
+                        <small>setWidth会同时改height</small>
+                    </div>
+                    <p><strong>问题：</strong>正方形不能真正替代矩形，行为不一致导致bug</p>
+                </div>
+                
+                <div class="good-design" id="lsp-good" style="display: none;">
+                    <div class="design-label">良好设计</div>
+                    <div class="class-box" style="background: #51cf66; width: 150px;">
+                        <div>Shape (接口)</div>
+                    </div>
+                    <div style="margin: 10px 0; display: flex; justify-content: space-around;">
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>Rectangle</div>
+                            <small>独立宽高</small>
+                        </div>
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>Square</div>
+                            <small>统一边长</small>
+                        </div>
+                    </div>
+                    <p><strong>优势：</strong>每种形状都有自己的实现，不会互相干扰</p>
+                </div>
+            </div>
+            
+            <div class="code-example" id="lsp-code">
+                <div class="code-block">
+<span class="comment">// ❌ 违反LSP - 经典矩形/正方形问题</span>
+<span class="keyword">class</span> <span class="type">Rectangle</span> {
+    <span class="keyword">protected int</span> width, height;
+    
+    <span class="keyword">public void</span> setWidth(<span class="type">int</span> w) { <span class="keyword">this</span>.width = w; }
+    <span class="keyword">public void</span> setHeight(<span class="type">int</span> h) { <span class="keyword">this</span>.height = h; }
+    <span class="keyword">public int</span> getArea() { <span class="keyword">return</span> width * height; }
+}
+
+<span class="keyword">class</span> <span class="type">Square</span> <span class="keyword">extends</span> <span class="type">Rectangle</span> {
+    <span class="keyword">public void</span> setWidth(<span class="type">int</span> w) {
+        <span class="keyword">super</span>.setWidth(w);
+        <span class="keyword">super</span>.setHeight(w);  <span class="comment">// 破坏了父类契约！</span>
+    }
+}
+
+<span class="comment">// ✅ 遵循LSP - 使用接口</span>
+<span class="keyword">interface</span> <span class="type">Shape</span> {
+    <span class="type">int</span> getArea();
+}
+
+<span class="keyword">class</span> <span class="type">Rectangle</span> <span class="keyword">implements</span> <span class="type">Shape</span> {
+    <span class="keyword">private int</span> width, height;
+    <span class="keyword">public int</span> getArea() { <span class="keyword">return</span> width * height; }
+}
+
+<span class="keyword">class</span> <span class="type">Square</span> <span class="keyword">implements</span> <span class="type">Shape</span> {
+    <span class="keyword">private int</span> side;
+    <span class="keyword">public int</span> getArea() { <span class="keyword">return</span> side * side; }
+}
+                </div>
+            </div>
+        </div>
+        
+        <!-- ISP Section -->
+        <div class="principle-section" id="isp-section">
+            <div class="principle-header">
+                <div class="principle-title">I - 接口隔离原则 (ISP)</div>
+                <div class="principle-letter">I</div>
+            </div>
+            
+            <div class="restaurant-analogy">
+                <h4>🔧 餐厅类比</h4>
+                <p><strong>错误做法：</strong>要求每个厨师都会使用厨房里的所有工具（烤箱、搅拌机、咖啡机...）</p>
+                <p><strong>正确做法：</strong>每个工作站只提供必要的工具</p>
+                <div style="margin-top: 10px;">
+                    <div class="chef-station">
+                        <div class="chef-icon">🖨️</div>
+                        <div>打印站</div>
+                        <small>打印机+纸张</small>
+                    </div>
+                    <div class="chef-station">
+                        <div class="chef-icon">📠</div>
+                        <div>传真站</div>
+                        <small>传真机</small>
+                    </div>
+                    <div class="chef-station">
+                        <div class="chef-icon">📄</div>
+                        <div>扫描站</div>
+                        <small>扫描仪</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toggle-container">
+                <button class="toggle-btn active" onclick="toggleDesign('isp', 'bad')">❌ 违反ISP</button>
+                <button class="toggle-btn" onclick="toggleDesign('isp', 'good')">✅ 遵循ISP</button>
+                <button class="refactor-btn" onclick="showCode('isp')">💻 查看代码示例</button>
+            </div>
+            
+            <div class="design-comparison">
+                <div class="bad-design" id="isp-bad">
+                    <div class="design-label">糟糕设计</div>
+                    <div class="class-box" style="width: 200px;">
+                        <div>Printer接口</div>
+                        <small>print() + scan() + fax()</small>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div class="class-box" style="background: #ff6b6b;">
+                            <div>SimplePrinter</div>
+                            <small>必须实现scan和fax</small>
+                        </div>
+                    </div>
+                    <p><strong>问题：</strong>简单打印机被迫实现不需要的scan和fax方法</p>
+                </div>
+                
+                <div class="good-design" id="isp-good" style="display: none;">
+                    <div class="design-label">良好设计</div>
+                    <div style="display: flex; justify-content: space-around;">
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>Printable</div>
+                            <small>print()</small>
+                        </div>
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>Scannable</div>
+                            <small>scan()</small>
+                        </div>
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>Faxable</div>
+                            <small>fax()</small>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>SimplePrinter</div>
+                            <small>只实现Printable</small>
+                        </div>
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>MultifunctionPrinter</div>
+                            <small>实现全部三个</small>
+                        </div>
+                    </div>
+                    <p><strong>优势：</strong>客户端只依赖它们需要的接口</p>
+                </div>
+            </div>
+            
+            <div class="code-example" id="isp-code">
+                <div class="code-block">
+<span class="comment">// ❌ 违反ISP - 胖接口</span>
+<span class="keyword">interface</span> <span class="type">Printer</span> {
+    <span class="keyword">void</span> print(Document doc);
+    <span class="keyword">void</span> scan(Document doc);      <span class="comment">// 不是所有打印机都能扫描</span>
+    <span class="keyword">void</span> fax(Document doc);         <span class="comment">// 不是所有打印机都能传真</span>
+}
+
+<span class="keyword">class</span> <span class="type">SimplePrinter</span> <span class="keyword">implements</span> <span class="type">Printer</span> {
+    <span class="keyword">public void</span> print(Document doc) { <span class="comment">// 实现</span> }
+    <span class="keyword">public void</span> scan(Document doc) {
+        <span class="keyword">throw new</span> UnsupportedOperationException(<span class="string">"不支持扫描"</span>);
+    }
+    <span class="keyword">public void</span> fax(Document doc) {
+        <span class="keyword">throw new</span> UnsupportedOperationException(<span class="string">"不支持传真"</span>);
+    }
+}
+
+<span class="comment">// ✅ 遵循ISP - 接口分离</span>
+<span class="keyword">interface</span> <span class="type">Printable</span> {
+    <span class="keyword">void</span> print(Document doc);
+}
+
+<span class="keyword">interface</span> <span class="type">Scannable</span> {
+    <span class="keyword">void</span> scan(Document doc);
+}
+
+<span class="keyword">interface</span> <span class="type">Faxable</span> {
+    <span class="keyword">void</span> fax(Document doc);
+}
+
+<span class="keyword">class</span> <span class="type">SimplePrinter</span> <span class="keyword">implements</span> <span class="type">Printable</span> {
+    <span class="keyword">public void</span> print(Document doc) { <span class="comment">// 只实现需要的</span> }
+}
+
+<span class="keyword">class</span> <span class="type">MultifunctionPrinter</span> 
+    <span class="keyword">implements</span> <span class="type">Printable</span>, <span class="type">Scannable</span>, <span class="type">Faxable</span> {
+    <span class="comment">// 实现所有功能</span>
+}
+                </div>
+            </div>
+        </div>
+        
+        <!-- DIP Section -->
+        <div class="principle-section" id="dip-section">
+            <div class="principle-header">
+                <div class="principle-title">D - 依赖倒置原则 (DIP)</div>
+                <div class="principle-letter">D</div>
+            </div>
+            
+            <div class="restaurant-analogy">
+                <h4>🚚 餐厅类比</h4>
+                <p><strong>错误做法：</strong>厨房直接联系特定农场："我们只从张三农场买西红柿"</p>
+                <p><strong>正确做法：</strong>厨房向供应商订购："我们需要新鲜西红柿"，供应商决定从哪个农场采购</p>
+                <div style="margin-top: 10px;">
+                    <div class="chef-station">
+                        <div class="chef-icon">🍳</div>
+                        <div>厨房</div>
+                    </div>
+                    <div style="font-size: 2em; margin: 0 10px;">➡️</div>
+                    <div class="chef-station">
+                        <div class="chef-icon">🏪</div>
+                        <div>供应商接口</div>
+                    </div>
+                    <div style="font-size: 2em; margin: 0 10px;">➡️</div>
+                    <div class="chef-station">
+                        <div class="chef-icon">🚜</div>
+                        <div>具体农场</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="toggle-container">
+                <button class="toggle-btn active" onclick="toggleDesign('dip', 'bad')">❌ 违反DIP</button>
+                <button class="toggle-btn" onclick="toggleDesign('dip', 'good')">✅ 遵循DIP</button>
+                <button class="refactor-btn" onclick="showCode('dip')">💻 查看代码示例</button>
+            </div>
+            
+            <div class="design-comparison">
+                <div class="bad-design" id="dip-bad">
+                    <div class="design-label">糟糕设计</div>
+                    <div class="class-box" style="width: 150px;">
+                        <div>OrderService</div>
+                    </div>
+                    <div style="margin: 10px 0;">⬇️ 直接依赖</div>
+                    <div class="class-box" style="background: #ff6b6b; width: 150px;">
+                        <div>MySQLDatabase</div>
+                        <small>硬编码具体实现</small>
+                    </div>
+                    <p><strong>问题：</strong>更换数据库需要修改OrderService，耦合度高</p>
+                </div>
+                
+                <div class="good-design" id="dip-good" style="display: none;">
+                    <div class="design-label">良好设计</div>
+                    <div class="class-box" style="width: 150px;">
+                        <div>OrderService</div>
+                    </div>
+                    <div style="margin: 10px 0;">⬇️ 依赖抽象</div>
+                    <div class="class-box" style="background: #51cf66; width: 150px;">
+                        <div>Database (接口)</div>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; justify-content: space-around;">
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>MySQL</div>
+                        </div>
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>PostgreSQL</div>
+                        </div>
+                        <div class="class-box" style="background: #51cf66;">
+                            <div>MongoDB</div>
+                        </div>
+                    </div>
+                    <p><strong>优势：</strong>可以轻松切换数据库实现，无需修改OrderService</p>
+                </div>
+            </div>
+            
+            <div class="code-example" id="dip-code">
+                <div class="code-block">
+<span class="comment">// ❌ 违反DIP - 高层模块依赖低层模块</span>
+<span class="keyword">class</span> <span class="type">OrderService</span> {
+    <span class="keyword">private</span> MySQLDatabase db = <span class="keyword">new</span> MySQLDatabase();
+    
+    <span class="keyword">public void</span> saveOrder(Order order) {
+        db.connect();           <span class="comment">// 耦合到MySQL</span>
+        db.save(order);
+        db.disconnect();
+    }
+}
+
+<span class="comment">// ✅ 遵循DIP - 依赖抽象</span>
+<span class="keyword">interface</span> <span class="type">Database</span> {
+    <span class="keyword">void</span> connect();
+    <span class="keyword">void</span> save(Object data);
+    <span class="keyword">void</span> disconnect();
+}
+
+<span class="keyword">class</span> <span class="type">OrderService</span> {
+    <span class="keyword">private</span> Database db;
+    
+    <span class="comment">// 通过构造函数注入依赖</span>
+    <span class="keyword">public</span> OrderService(Database db) {
+        <span class="keyword">this</span>.db = db;
+    }
+    
+    <span class="keyword">public void</span> saveOrder(Order order) {
+        db.connect();
+        db.save(order);
+        db.disconnect();
+    }
+}
+
+<span class="comment">// 可以轻松切换实现</span>
+OrderService service = <span class="keyword">new</span> OrderService(<span class="keyword">new</span> PostgreSQLDatabase());
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Table -->
+        <div class="principle-section">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">📊 设计对比表</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>方面</th>
+                        <th>❌ 糟糕设计</th>
+                        <th>✅ SOLID设计</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>耦合度</strong></td>
+                        <td>🔴 紧耦合 - 牵一发而动全身</td>
+                        <td>🟢 松耦合 - 模块化独立</td>
+                    </tr>
+                    <tr>
+                        <td><strong>可维护性</strong></td>
+                        <td>🔴 难以维护 - 改一处坏多处</td>
+                        <td>🟢 易于维护 - 局部化修改</td>
+                    </tr>
+                    <tr>
+                        <td><strong>类的设计</strong></td>
+                        <td>🔴 上帝类 - 什么都做</td>
+                        <td>🟢 专注类 - 各司其职</td>
+                    </tr>
+                    <tr>
+                        <td><strong>代码健壮性</strong></td>
+                        <td>🔴 脆弱代码 - 容易崩溃</td>
+                        <td>🟢 健壮代码 - 稳定可靠</td>
+                    </tr>
+                    <tr>
+                        <td><strong>可扩展性</strong></td>
+                        <td>🔴 难以扩展 - 需要重构</td>
+                        <td>🟢 易于扩展 - 添加即可</td>
+                    </tr>
+                    <tr>
+                        <td><strong>可测试性</strong></td>
+                        <td>🔴 难以测试 - 依赖复杂</td>
+                        <td>🟢 易于测试 - 单元独立</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Benefits Section -->
+        <div class="principle-section">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎯 SOLID原则的好处</h2>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">🧪</div>
+                    <h4>易于测试</h4>
+                    <p>每个类职责单一，可以独立进行单元测试，mock依赖简单</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">🔧</div>
+                    <h4>易于维护</h4>
+                    <p>修改局限在单个类或模块内，不会影响其他部分</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">➕</div>
+                    <h4>易于扩展</h4>
+                    <p>添加新功能无需修改现有代码，降低引入bug的风险</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">👥</div>
+                    <h4>团队协作</h4>
+                    <p>职责清晰，不同开发者可以并行开发不同模块</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- When to Apply -->
+        <div class="principle-section">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">📅 何时应用SOLID原则</h2>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">🆕</div>
+                    <h4>新项目开发</h4>
+                    <p>从一开始就按照SOLID原则设计架构，避免后期重构成本</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">🔄</div>
+                    <h4>遗留代码重构</h4>
+                    <p>逐步改进现有代码，每次重构一个原则，渐进式提升质量</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">📋</div>
+                    <h4>代码审查清单</h4>
+                    <p>将SOLID原则作为Code Review的检查项，确保代码质量</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">🏗️</div>
+                    <h4>架构决策</h4>
+                    <p>在设计系统架构时，用SOLID原则指导模块划分和接口设计</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tradeoffs Section -->
+        <div class="principle-section">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">⚖️ 权衡与考虑</h2>
+            
+            <ul class="tradeoffs-list">
+                <li>
+                    <strong>📁 初期文件更多</strong>：遵循SOLID会产生更多的类和文件，项目结构看起来更复杂
+                </li>
+                <li>
+                    <strong>⚙️ 设置稍复杂</strong>：需要设计接口、抽象类，前期投入时间较多
+                </li>
+                <li>
+                    <strong>✅ 中大型项目值得</strong>：随着项目规模增长，SOLID带来的好处远超初期成本
+                </li>
+                <li>
+                    <strong>⚠️ 小脚本可能过度</strong>：对于几十行的小工具脚本，可能不需要严格遵循所有原则
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Quiz Section -->
+        <div class="principle-section">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎮 互动测验</h2>
+            
+            <div class="quiz-container">
+                <div class="quiz-question" id="quiz-question">
+                    问题 1/5: 一个类既负责读取文件，又负责解析数据，还负责写入数据库。这违反了哪个原则？
+                </div>
+                
+                <div class="quiz-options" id="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(0)">A. 开闭原则 (OCP)</div>
+                    <div class="quiz-option" onclick="checkAnswer(1)">B. 单一职责原则 (SRP)</div>
+                    <div class="quiz-option" onclick="checkAnswer(2)">C. 里氏替换原则 (LSP)</div>
+                    <div class="quiz-option" onclick="checkAnswer(3)">D. 依赖倒置原则 (DIP)</div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="refactor-btn" onclick="nextQuestion()">下一题 ➡️</button>
+                </div>
+                
+                <div style="text-align: center; margin-top: 10px;">
+                    <span id="score-display">得分: 0/5</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div class="explanation" style="background: #e6f3ff; border-color: #667eea;">
+            <h4 style="color: #667eea;">🎯 核心要点总结</h4>
+            <ul>
+                <li><strong>S - 单一职责</strong>：一个类只做一件事，像餐厅里每个厨师专精一个领域</li>
+                <li><strong>O - 开闭原则</strong>：对扩展开放，对修改关闭，像菜单可以加新菜但不改厨房</li>
+                <li><strong>L - 里氏替换</strong>：子类可以无缝替换父类，像海盐可以替代普通盐</li>
+                <li><strong>I - 接口隔离</strong>：客户端只依赖需要的接口，像厨师只用自己工作站的工具</li>
+                <li><strong>D - 依赖倒置</strong>：依赖抽象而非具体实现，像厨房向供应商订购而非指定农场</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>记住：</strong>SOLID不是教条，而是指导原则。根据项目规模和团队情况灵活应用！</p>
+        </div>
+    </div>
+    
+    <script>
+        // Toggle between bad and good design
+        function toggleDesign(principle, type) {
+            const badDiv = document.getElementById(`${principle}-bad`);
+            const goodDiv = document.getElementById(`${principle}-good`);
+            const buttons = document.querySelectorAll(`#${principle}-section .toggle-btn`);
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (type === 'bad') {
+                badDiv.style.display = 'block';
+                goodDiv.style.display = 'none';
+                buttons[0].classList.add('active');
+            } else {
+                badDiv.style.display = 'none';
+                goodDiv.style.display = 'block';
+                buttons[1].classList.add('active');
+            }
+        }
+        
+        // Show/hide code examples
+        function showCode(principle) {
+            const codeDiv = document.getElementById(`${principle}-code`);
+            codeDiv.classList.toggle('visible');
+        }
+        
+        // Quiz functionality
+        const questions = [
+            {
+                question: "一个类既负责读取文件，又负责解析数据，还负责写入数据库。这违反了哪个原则？",
+                options: ["A. 开闭原则 (OCP)", "B. 单一职责原则 (SRP)", "C. 里氏替换原则 (LSP)", "D. 依赖倒置原则 (DIP)"],
+                correct: 1
+            },
+            {
+                question: "每次添加新的支付方式都需要修改PaymentProcessor类的if-else语句。这违反了哪个原则？",
+                options: ["A. 单一职责原则 (SRP)", "B. 开闭原则 (OCP)", "C. 接口隔离原则 (ISP)", "D. 依赖倒置原则 (DIP)"],
+                correct: 1
+            },
+            {
+                question: "Square类继承Rectangle类，但setWidth()会同时修改height，导致面积计算错误。这违反了哪个原则？",
+                options: ["A. 开闭原则 (OCP)", "B. 里氏替换原则 (LSP)", "C. 接口隔离原则 (ISP)", "D. 依赖倒置原则 (DIP)"],
+                correct: 1
+            },
+            {
+                question: "SimplePrinter实现了Printer接口，但必须为不需要的scan()和fax()方法抛出异常。这违反了哪个原则？",
+                options: ["A. 单一职责原则 (SRP)", "B. 开闭原则 (OCP)", "C. 接口隔离原则 (ISP)", "D. 依赖倒置原则 (DIP)"],
+                correct: 2
+            },
+            {
+                question: "OrderService类直接创建MySQLDatabase对象，无法轻松切换到其他数据库。这违反了哪个原则？",
+                options: ["A. 单一职责原则 (SRP)", "B. 开闭原则 (OCP)", "C. 里氏替换原则 (LSP)", "D. 依赖倒置原则 (DIP)"],
+                correct: 3
+            }
+        ];
+        
+        let currentQuestion = 0;
+        let score = 0;
+        let answered = false;
+        
+        function checkAnswer(selectedIndex) {
+            if (answered) return;
+            
+            const options = document.querySelectorAll('.quiz-option');
+            const correctIndex = questions[currentQuestion].correct;
+            
+            options.forEach((option, index) => {
+                option.style.pointerEvents = 'none';
+                if (index === correctIndex) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && index !== correctIndex) {
+                    option.classList.add('wrong');
+                }
+            });
+            
+            if (selectedIndex === correctIndex) {
+                score++;
+            }
+            
+            answered = true;
+            updateScore();
+        }
+        
+        function nextQuestion() {
+            currentQuestion++;
+            answered = false;
+            
+            if (currentQuestion >= questions.length) {
+                currentQuestion = 0;
+                score = 0;
+            }
+            
+            loadQuestion();
+        }
+        
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('quiz-question').textContent = `问题 ${currentQuestion + 1}/5: ${q.question}`;
+            
+            const optionsDiv = document.getElementById('quiz-options');
+            optionsDiv.innerHTML = '';
+            
+            q.options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'quiz-option';
+                div.textContent = option;
+                div.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(div);
+            });
+            
+            updateScore();
+        }
+        
+        function updateScore() {
+            document.getElementById('score-display').textContent = `得分: ${score}/${questions.length}`;
+        }
+        
+        // Initialize first question
+        loadQuestion();
+    </script>
+</body>
+</html>
