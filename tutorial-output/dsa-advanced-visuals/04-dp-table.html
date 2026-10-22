@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Dynamic Programming - Climbing Stairs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .analogy {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .analogy-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .analogy-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-start { background: #4ecdc4; color: white; }
+        .btn-step { background: #a8e6cf; color: #333; }
+        .btn-reset { background: #ff6b6b; color: white; }
+        .btn-auto { background: #c7ceea; color: #333; }
+
+        .dp-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .cell {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.5s ease;
+            position: relative;
+            min-height: 100px;
+        }
+
+        .cell.filled {
+            background: rgba(78, 205, 196, 0.5);
+            animation: fillCell 0.5s ease;
+        }
+
+        .cell.current {
+            background: rgba(255, 215, 0, 0.6);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        @keyframes fillCell {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .cell-label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        .cell-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .cell-formula {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .arrow-indicator {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+
+        .stairs-visual {
+            margin-top: 20px;
+            position: relative;
+            height: 300px;
+        }
+
+        .stair {
+            position: absolute;
+            background: rgba(255,255,255,0.3);
+            border-radius: 5px;
+            transition: all 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stair.active {
+            background: rgba(255, 215, 0, 0.7);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .person {
+            position: absolute;
+            font-size: 2em;
+            transition: all 0.5s ease;
+            z-index: 10;
+        }
+
+        .comparison {
+            margin-top: 30px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .method-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .method-title {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .method-desc {
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .code-block {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+
+        .status-panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .step-info {
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+
+        .highlight {
+            background: rgba(255,215,0,0.3);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        input[type="number"] {
+            padding: 10px 15px;
+            font-size: 1em;
+            border: none;
+            border-radius: 25px;
+            width: 150px;
+            text-align: center;
+            margin: 0 10px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Dynamic Programming: Climbing Stairs</h1>
+            <p>Remembering Previous Steps to Solve Bigger Problems</p>
+        </header>
+
+        <div class="analogy">
+            <div class="analogy-icon">🪜</div>
+            <div class="analogy-text">
+                <strong>Real-World Analogy: Climbing Stairs</strong><br>
+                Imagine you're climbing a staircase where you can take either 1 or 2 steps at a time. How many different ways can you reach the top? Instead of recalculating from scratch each time, DP remembers previous results—like leaving breadcrumbs on each step you've already climbed! 🍞✨
+            </div>
+        </div>
+
+        <div class="input-section">
+            <label for="numStairs">Number of Stairs:</label>
+            <input type="number" id="numStairs" value="8" min="1" max="15">
+            <button class="btn-start" onclick="initDP()">Set Stairs</button>
+        </div>
+
+        <div class="controls">
+            <button class="btn-start" onclick="startAuto()">▶️ Auto Run</button>
+            <button class="btn-step" onclick="nextStep()">⏭️ Next Step</button>
+            <button class="btn-reset" onclick="resetDP()">🔄 Reset</button>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-title">📈 DP Table (Bottom-Up)</div>
+                <div class="dp-table" id="dpTable"></div>
+                
+                <div class="status-panel">
+                    <div class="panel-title">📝 Current Step</div>
+                    <div class="step-info" id="stepInfo">
+                        Click "Next Step" or "Auto Run" to see the DP table being filled!
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">🪜 Staircase Visualization</div>
+                <div class="stairs-visual" id="stairsVisual"></div>
+            </div>
+        </div>
+
+        <div class="comparison">
+            <div class="panel-title">💡 Memoization vs Tabulation Comparison</div>
+            <div class="comparison-grid">
+                <div class="method-card">
+                    <div class="method-title">🔝 Top-Down (Memoization)</div>
+                    <div class="method-desc">
+                        Start from the problem and break it down. Store results as you go back up.
+                    </div>
+                    <div class="code-block">
+def climb(n, memo={}):
+    if n in memo:
+        return memo[n]
+    if n <= 2:
+        return n
+    memo[n] = climb(n-1) + climb(n-2)
+    return memo[n]
+                    </div>
+                </div>
+                <div class="method-card">
+                    <div class="method-title">🔽 Bottom-Up (Tabulation)</div>
+                    <div class="method-desc">
+                        Start from base cases and build up to the solution. Fill the table iteratively.
+                    </div>
+                    <div class="code-block">
+def climb(n):
+    dp = [0] * (n+1)
+    dp[1] = 1
+    dp[2] = 2
+    for i in range(3, n+1):
+        dp[i] = dp[i-1] + dp[i-2]
+    return dp[n]
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let numStairs = 8;
+        let dpArray = [];
+        let currentStep = 0;
+        let isRunning = false;
+        let autoInterval = null;
+
+        function initDP() {
+            numStairs = parseInt(document.getElementById('numStairs').value) || 8;
+            resetDP();
+        }
+
+        function resetDP() {
+            isRunning = false;
+            if (autoInterval) clearInterval(autoInterval);
+            currentStep = 0;
+            dpArray = new Array(numStairs + 1).fill(null);
+            
+            document.getElementById('stepInfo').innerHTML = 
+                'Click "Next Step" or "Auto Run" to see the DP table being filled!';
+            
+            renderTable();
+            renderStairs();
+        }
+
+        function renderTable() {
+            const table = document.getElementById('dpTable');
+            table.innerHTML = '';
+            
+            for (let i = 0; i <= numStairs; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `cell-${i}`;
+                
+                if (dpArray[i] !== null) {
+                    cell.classList.add('filled');
+                }
+                
+                if (i === currentStep && dpArray[i] === null) {
+                    cell.classList.add('current');
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow-indicator';
+                    arrow.textContent = '⬇️';
+                    cell.appendChild(arrow);
+                }
+                
+                const label = document.createElement('div');
+                label.className = 'cell-label';
+                label.textContent = i === 0 ? 'Ground' : `Step ${i}`;
+                
+                const value = document.createElement('div');
+                value.className = 'cell-value';
+                value.textContent = dpArray[i] !== null ? dpArray[i] : '?';
+                
+                const formula = document.createElement('div');
+                formula.className = 'cell-formula';
+                if (i === 0) {
+                    formula.textContent = 'Base case';
+                } else if (i === 1) {
+                    formula.textContent = '1 way';
+                } else if (i === 2) {
+                    formula.textContent = '2 ways';
+                } else if (dpArray[i] !== null) {
+                    formula.textContent = `${dpArray[i-1]} + ${dpArray[i-2]}`;
+                } else {
+                    formula.textContent = 'dp[i-1] + dp[i-2]';
+                }
+                
+                cell.appendChild(label);
+                cell.appendChild(value);
+                cell.appendChild(formula);
+                table.appendChild(cell);
+            }
+        }
+
+        function renderStairs() {
+            const visual = document.getElementById('stairsVisual');
+            visual.innerHTML = '';
+            
+            const stairWidth = 60;
+            const stairHeight = 30;
+            const startX = 50;
+            const startY = 250;
+            
+            for (let i = 1; i <= numStairs; i++) {
+                const stair = document.createElement('div');
+                stair.className = 'stair';
+                stair.id = `stair-${i}`;
+                
+                if (dpArray[i] !== null) {
+                    stair.classList.add('active');
+                }
+                
+                stair.style.width = `${stairWidth}px`;
+                stair.style.height = `${stairHeight}px`;
+                stair.style.left = `${startX + (i - 1) * stairWidth}px`;
+                stair.style.bottom = `${i * stairHeight}px`;
+                stair.textContent = dpArray[i] !== null ? dpArray[i] : '';
+                
+                visual.appendChild(stair);
+            }
+            
+            // Add person emoji
+            if (currentStep > 0 && currentStep <= numStairs) {
+                const person = document.createElement('div');
+                person.className = 'person';
+                person.textContent = '🧗';
+                person.style.left = `${startX + (currentStep - 1) * stairWidth + 15}px`;
+                person.style.bottom = `${currentStep * stairHeight + 35}px`;
+                visual.appendChild(person);
+            }
+        }
+
+        function nextStep() {
+            if (currentStep > numStairs) {
+                document.getElementById('stepInfo').innerHTML = 
+                    `<span class="highlight">✅ Complete!</span> There are <strong>${dpArray[numStairs]}</strong> ways to climb ${numStairs} stairs!`;
+                isRunning = false;
+                if (autoInterval) clearInterval(autoInterval);
+                return;
+            }
+
+            if (currentStep === 0) {
+                dpArray[0] = 1;
+                document.getElementById('stepInfo').innerHTML = 
+                    '<span class="highlight">Step 0:</span> Base case - Standing on ground level. <strong>1 way</strong> to be here (do nothing)!';
+            } else if (currentStep === 1) {
+                dpArray[1] = 1;
+                document.getElementById('stepInfo').innerHTML = 
+                    '<span class="highlight">Step 1:</span> Only <strong>1 way</strong> to reach step 1 (take 1 step from ground).';
+            } else if (currentStep === 2) {
+                dpArray[2] = 2;
+                document.getElementById('stepInfo').innerHTML = 
+                    '<span class="highlight">Step 2:</span> <strong>2 ways</strong> to reach step 2: (1+1) or (2).';
+            } else {
+                dpArray[currentStep] = dpArray[currentStep - 1] + dpArray[currentStep - 2];
+                document.getElementById('stepInfo').innerHTML = 
+                    `<span class="highlight">Step ${currentStep}:</span> dp[${currentStep}] = dp[${currentStep-1}] + dp[${currentStep-2}] = ${dpArray[currentStep-1]} + ${dpArray[currentStep-2]} = <strong>${dpArray[currentStep]}</strong>`;
+            }
+
+            currentStep++;
+            renderTable();
+            renderStairs();
+        }
+
+        function startAuto() {
+            resetDP();
+            isRunning = true;
+            autoInterval = setInterval(() => {
+                if (!isRunning) return;
+                nextStep();
+            }, 1000);
+        }
+
+        // Initialize
+        window.onload = () => {
+            initDP();
+        };
+    </script>
+</body>
+</html>

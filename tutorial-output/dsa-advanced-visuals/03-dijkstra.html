@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ Dijkstra's Algorithm - GPS Navigation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .analogy {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .analogy-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .analogy-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .graph-panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        svg {
+            width: 100%;
+            height: 500px;
+        }
+
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .node circle {
+            fill: #fff;
+            stroke: #333;
+            stroke-width: 3;
+            transition: all 0.5s ease;
+        }
+
+        .node.visited circle {
+            fill: #4ecdc4;
+            stroke: #2ecc71;
+        }
+
+        .node.current circle {
+            fill: #ffd700;
+            stroke: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+
+        .node.target circle {
+            fill: #ff6b6b;
+            stroke: #ff0000;
+        }
+
+        @keyframes pulse {
+            0%, 100% { r: 30; }
+            50% { r: 35; }
+        }
+
+        .node text {
+            fill: #333;
+            font-size: 14px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .edge {
+            stroke: rgba(255,255,255,0.5);
+            stroke-width: 2;
+            fill: none;
+            transition: all 0.5s ease;
+        }
+
+        .edge.shortest-path {
+            stroke: #ffd700;
+            stroke-width: 4;
+            animation: dash 2s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -20;
+            }
+        }
+
+        .edge-weight {
+            fill: #fff;
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .weight-bg {
+            fill: rgba(0,0,0,0.7);
+            rx: 5;
+            ry: 5;
+        }
+
+        .info-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .distance-table {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        th {
+            background: rgba(255,255,255,0.2);
+            font-weight: bold;
+        }
+
+        tr.updated {
+            background: rgba(255,215,0,0.3);
+            animation: highlight 1s ease;
+        }
+
+        @keyframes highlight {
+            0%, 100% { background: rgba(255,215,0,0.3); }
+            50% { background: rgba(255,215,0,0.6); }
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-start { background: #4ecdc4; color: white; }
+        .btn-reset { background: #ff6b6b; color: white; }
+        .btn-step { background: #a8e6cf; color: #333; }
+
+        .status {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .step-info {
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+
+        .highlight {
+            background: rgba(255,215,0,0.3);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🗺️ Dijkstra's Shortest Path Algorithm</h1>
+            <p>Finding the Fastest Route Between Cities</p>
+        </header>
+
+        <div class="analogy">
+            <div class="analogy-icon">📍</div>
+            <div class="analogy-text">
+                <strong>Real-World Analogy: GPS Navigation</strong><br>
+                Imagine you're using a GPS app to find the fastest route from your home to a destination. The algorithm explores nearby roads first, gradually expanding outward like ripples in water, always choosing the shortest known path until it finds the optimal route! 🚗💨
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="graph-panel">
+                <div class="panel-title">🗺️ City Network Graph</div>
+                <svg id="graphSvg"></svg>
+            </div>
+
+            <div class="info-panel">
+                <div class="controls">
+                    <div class="panel-title">🎮 Controls</div>
+                    <button class="btn-start" onclick="startAlgorithm()">▶️ Start Algorithm</button>
+                    <button class="btn-step" onclick="nextStep()">⏭️ Next Step</button>
+                    <button class="btn-reset" onclick="resetGraph()">🔄 Reset</button>
+                </div>
+
+                <div class="distance-table">
+                    <div class="panel-title">📊 Distance Table</div>
+                    <table id="distanceTable">
+                        <thead>
+                            <tr>
+                                <th>City</th>
+                                <th>Distance</th>
+                                <th>Previous</th>
+                                <th>Visited</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="status">
+                    <div class="panel-title">📝 Algorithm Status</div>
+                    <div class="step-info" id="statusText">
+                        Click "Start Algorithm" to begin finding the shortest path from City A to City F!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cities = [
+            {id: 'A', x: 100, y: 250, name: 'Beijing'},
+            {id: 'B', x: 250, y: 100, name: 'Shanghai'},
+            {id: 'C', x: 250, y: 400, name: 'Guangzhou'},
+            {id: 'D', x: 450, y: 150, name: 'Chengdu'},
+            {id: 'E', x: 450, y: 350, name: 'Wuhan'},
+            {id: 'F', x: 600, y: 250, name: 'Xi\'an'}
+        ];
+
+        const edges = [
+            {from: 'A', to: 'B', weight: 4},
+            {from: 'A', to: 'C', weight: 2},
+            {from: 'B', to: 'D', weight: 3},
+            {from: 'B', to: 'E', weight: 2},
+            {from: 'C', to: 'E', weight: 5},
+            {from: 'D', to: 'F', weight: 2},
+            {from: 'E', to: 'F', weight: 3},
+            {from: 'B', to: 'C', weight: 6}
+        ];
+
+        let distances = {};
+        let previous = {};
+        let visited = new Set();
+        let current = null;
+        let stepCount = 0;
+        let isRunning = false;
+        let animationInterval = null;
+
+        function initDistances() {
+            distances = {};
+            previous = {};
+            visited = new Set();
+            current = null;
+            stepCount = 0;
+            
+            cities.forEach(city => {
+                distances[city.id] = city.id === 'A' ? 0 : Infinity;
+                previous[city.id] = null;
+            });
+        }
+
+        function drawGraph() {
+            const svg = document.getElementById('graphSvg');
+            svg.innerHTML = '';
+
+            // Draw edges
+            edges.forEach(edge => {
+                const fromCity = cities.find(c => c.id === edge.from);
+                const toCity = cities.find(c => c.id === edge.to);
+                
+                // Edge line
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', fromCity.x);
+                line.setAttribute('y1', fromCity.y);
+                line.setAttribute('x2', toCity.x);
+                line.setAttribute('y2', toCity.y);
+                line.setAttribute('class', 'edge');
+                line.setAttribute('data-from', edge.from);
+                line.setAttribute('data-to', edge.to);
+                svg.appendChild(line);
+
+                // Weight background
+                const midX = (fromCity.x + toCity.x) / 2;
+                const midY = (fromCity.y + toCity.y) / 2;
+                
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', midX - 15);
+                rect.setAttribute('y', midY - 10);
+                rect.setAttribute('width', 30);
+                rect.setAttribute('height', 20);
+                rect.setAttribute('class', 'weight-bg');
+                svg.appendChild(rect);
+
+                // Weight text
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', midX);
+                text.setAttribute('y', midY);
+                text.setAttribute('class', 'edge-weight');
+                text.textContent = edge.weight;
+                svg.appendChild(text);
+            });
+
+            // Draw nodes
+            cities.forEach(city => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', `node ${visited.has(city.id) ? 'visited' : ''} ${current === city.id ? 'current' : ''} ${city.id === 'F' ? 'target' : ''}`);
+                
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', city.x);
+                circle.setAttribute('cy', city.y);
+                circle.setAttribute('r', 30);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', city.x);
+                text.setAttribute('y', city.y);
+                text.textContent = city.id;
+                
+                const distText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                distText.setAttribute('x', city.x);
+                distText.setAttribute('y', city.y + 45);
+                distText.setAttribute('fill', '#fff');
+                distText.setAttribute('font-size', '11');
+                distText.setAttribute('text-anchor', 'middle');
+                distText.textContent = distances[city.id] === Infinity ? '∞' : distances[city.id];
+                
+                g.appendChild(circle);
+                g.appendChild(text);
+                g.appendChild(distText);
+                svg.appendChild(g);
+            });
+
+            updateTable();
+        }
+
+        function updateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            cities.forEach(city => {
+                const row = document.createElement('tr');
+                if (visited.has(city.id)) {
+                    row.classList.add('updated');
+                }
+                
+                const distCell = document.createElement('td');
+                distCell.textContent = distances[city.id] === Infinity ? '∞' : distances[city.id];
+                
+                const prevCell = document.createElement('td');
+                prevCell.textContent = previous[city.id] || '-';
+                
+                const visitCell = document.createElement('td');
+                visitCell.textContent = visited.has(city.id) ? '✅' : '❌';
+                
+                row.innerHTML = `<td>${city.id}</td>`;
+                row.appendChild(distCell);
+                row.appendChild(prevCell);
+                row.appendChild(visitCell);
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        function getUnvisitedNeighbors(nodeId) {
+            return edges.filter(e => 
+                (e.from === nodeId || e.to === nodeId) && 
+                !visited.has(e.from === nodeId ? e.to : e.from)
+            );
+        }
+
+        function nextStep() {
+            if (visited.size === cities.length) {
+                document.getElementById('statusText').innerHTML = 
+                    '<span class="highlight">✅ Algorithm Complete!</span> Shortest path from A to F found!';
+                highlightShortestPath();
+                isRunning = false;
+                if (animationInterval) clearInterval(animationInterval);
+                return;
+            }
+
+            // Find unvisited node with minimum distance
+            let minDist = Infinity;
+            let minNode = null;
+            
+            cities.forEach(city => {
+                if (!visited.has(city.id) && distances[city.id] < minDist) {
+                    minDist = distances[city.id];
+                    minNode = city.id;
+                }
+            });
+
+            if (!minNode) return;
+
+            current = minNode;
+            visited.add(minNode);
+            stepCount++;
+
+            // Update neighbors
+            const neighbors = getUnvisitedNeighbors(minNode);
+            let updated = [];
+            
+            neighbors.forEach(edge => {
+                const neighbor = edge.from === minNode ? edge.to : edge.from;
+                const newDist = distances[minNode] + edge.weight;
+                
+                if (newDist < distances[neighbor]) {
+                    distances[neighbor] = newDist;
+                    previous[neighbor] = minNode;
+                    updated.push(neighbor);
+                }
+            });
+
+            // Update status
+            const cityName = cities.find(c => c.id === minNode).name;
+            let statusHTML = `<span class="highlight">Step ${stepCount}:</span> Visiting <strong>${minNode} (${cityName})</strong><br>`;
+            statusHTML += `Distance: <strong>${distances[minNode]}</strong><br>`;
+            
+            if (updated.length > 0) {
+                statusHTML += `Updated distances: ${updated.map(n => `${n}=${distances[n]}`).join(', ')}`;
+            } else {
+                statusHTML += 'No updates needed.';
+            }
+            
+            document.getElementById('statusText').innerHTML = statusHTML;
+
+            drawGraph();
+        }
+
+        function startAlgorithm() {
+            resetGraph();
+            isRunning = true;
+            animationInterval = setInterval(() => {
+                if (!isRunning) return;
+                nextStep();
+            }, 1500);
+        }
+
+        function resetGraph() {
+            isRunning = false;
+            if (animationInterval) clearInterval(animationInterval);
+            initDistances();
+            current = null;
+            stepCount = 0;
+            visited = new Set();
+            
+            // Clear shortest path highlighting
+            document.querySelectorAll('.edge').forEach(e => {
+                e.classList.remove('shortest-path');
+            });
+            
+            document.getElementById('statusText').textContent = 
+                'Click "Start Algorithm" to begin finding the shortest path from City A to City F!';
+            
+            drawGraph();
+        }
+
+        function highlightShortestPath() {
+            // Trace back from F to A
+            let path = [];
+            let node = 'F';
+            
+            while (node !== null) {
+                path.unshift(node);
+                node = previous[node];
+            }
+            
+            // Highlight edges in path
+            for (let i = 0; i < path.length - 1; i++) {
+                const from = path[i];
+                const to = path[i + 1];
+                
+                document.querySelectorAll('.edge').forEach(edge => {
+                    if ((edge.getAttribute('data-from') === from && edge.getAttribute('data-to') === to) ||
+                        (edge.getAttribute('data-from') === to && edge.getAttribute('data-to') === from)) {
+                        edge.classList.add('shortest-path');
+                    }
+                });
+            }
+        }
+
+        // Initialize
+        window.onload = () => {
+            initDistances();
+            drawGraph();
+        };
+    </script>
+</body>
+</html>

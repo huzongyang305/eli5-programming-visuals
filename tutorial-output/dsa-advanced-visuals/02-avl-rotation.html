@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌳 AVL Tree Rotation - Balancing Scale Analogy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .analogy {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .analogy-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .analogy-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        button.active {
+            background: #ffd700 !important;
+            color: #333;
+        }
+
+        .btn-ll { background: #ff6b6b; color: white; }
+        .btn-rr { background: #4ecdc4; color: white; }
+        .btn-lr { background: #a8e6cf; color: #333; }
+        .btn-rl { background: #c7ceea; color: #333; }
+
+        .visualization {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .visualization {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tree-panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 400px;
+        }
+
+        .panel-title {
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        svg {
+            width: 100%;
+            height: 350px;
+        }
+
+        .node {
+            transition: all 0.5s ease;
+        }
+
+        .node circle {
+            fill: #fff;
+            stroke: #667eea;
+            stroke-width: 3;
+            transition: all 0.5s ease;
+        }
+
+        .node.unbalanced circle {
+            fill: #ff6b6b;
+            stroke: #ff0000;
+        }
+
+        .node.balanced circle {
+            fill: #4ecdc4;
+            stroke: #2ecc71;
+        }
+
+        .node text {
+            fill: #333;
+            font-size: 16px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .edge {
+            stroke: #fff;
+            stroke-width: 2;
+            fill: none;
+            transition: all 0.5s ease;
+        }
+
+        .balance-factor {
+            fill: #ffd700;
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+        }
+
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .info-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .info-content {
+            line-height: 1.8;
+        }
+
+        .step {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #ffd700;
+            color: #333;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .highlight {
+            background: rgba(255,215,0,0.3);
+            padding: 2px 8px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌳 AVL Tree Rotation</h1>
+            <p>Understanding Self-Balancing Binary Search Trees</p>
+        </header>
+
+        <div class="analogy">
+            <div class="analogy-icon">⚖️</div>
+            <div class="analogy-text">
+                <strong>Real-World Analogy: Balancing a Scale (天平平衡)</strong><br>
+                Just like a scale needs equal weight on both sides to stay balanced, an AVL tree maintains balance by ensuring the height difference between left and right subtrees is at most 1. When it becomes unbalanced, we perform rotations—like adjusting weights—to restore equilibrium! ⚖️✨
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-ll" onclick="showRotation('LL')">🔴 LL Rotation (Left-Left)</button>
+            <button class="btn-rr" onclick="showRotation('RR')">🟢 RR Rotation (Right-Right)</button>
+            <button class="btn-lr" onclick="showRotation('LR')">🔵 LR Rotation (Left-Right)</button>
+            <button class="btn-rl" onclick="showRotation('RL')">🟣 RL Rotation (Right-Left)</button>
+        </div>
+
+        <div class="visualization">
+            <div class="tree-panel">
+                <div class="panel-title">❌ Before Rotation (Unbalanced)</div>
+                <svg id="beforeSvg"></svg>
+            </div>
+            <div class="tree-panel">
+                <div class="panel-title">✅ After Rotation (Balanced)</div>
+                <svg id="afterSvg"></svg>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-title">📋 Rotation Details & Balance Factors</div>
+            <div class="info-content" id="infoContent">
+                <p style="text-align: center; font-style: italic;">Click a rotation type above to see the animation!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rotations = {
+            LL: {
+                before: [
+                    {id: 'A', x: 200, y: 50, bf: 2},
+                    {id: 'B', x: 100, y: 150, bf: 1},
+                    {id: 'C', x: 50, y: 250, bf: 0}
+                ],
+                edges: [['A', 'B'], ['B', 'C']],
+                after: [
+                    {id: 'B', x: 200, y: 50, bf: 0},
+                    {id: 'C', x: 100, y: 150, bf: 0},
+                    {id: 'A', x: 300, y: 150, bf: 0}
+                ],
+                edgesAfter: [['B', 'C'], ['B', 'A']],
+                info: `
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <strong>Problem:</strong> Node A has balance factor <span class="highlight">+2</span> (left-heavy). Left child B is also left-heavy.
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <strong>Solution:</strong> Perform <span class="highlight">Right Rotation</span> around A. B becomes the new root!
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <strong>Result:</strong> All nodes now have balance factors of 0. The tree is perfectly balanced! 🎉
+                    </div>
+                `
+            },
+            RR: {
+                before: [
+                    {id: 'A', x: 200, y: 50, bf: -2},
+                    {id: 'B', x: 300, y: 150, bf: -1},
+                    {id: 'C', x: 350, y: 250, bf: 0}
+                ],
+                edges: [['A', 'B'], ['B', 'C']],
+                after: [
+                    {id: 'B', x: 200, y: 50, bf: 0},
+                    {id: 'A', x: 100, y: 150, bf: 0},
+                    {id: 'C', x: 300, y: 150, bf: 0}
+                ],
+                edgesAfter: [['B', 'A'], ['B', 'C']],
+                info: `
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <strong>Problem:</strong> Node A has balance factor <span class="highlight">-2</span> (right-heavy). Right child B is also right-heavy.
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <strong>Solution:</strong> Perform <span class="highlight">Left Rotation</span> around A. B becomes the new root!
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <strong>Result:</strong> All nodes now have balance factors of 0. Perfectly balanced again! 🎉
+                    </div>
+                `
+            },
+            LR: {
+                before: [
+                    {id: 'A', x: 200, y: 50, bf: 2},
+                    {id: 'B', x: 100, y: 150, bf: -1},
+                    {id: 'C', x: 150, y: 250, bf: 0}
+                ],
+                edges: [['A', 'B'], ['B', 'C']],
+                after: [
+                    {id: 'C', x: 200, y: 50, bf: 0},
+                    {id: 'B', x: 100, y: 150, bf: 0},
+                    {id: 'A', x: 300, y: 150, bf: 0}
+                ],
+                edgesAfter: [['C', 'B'], ['C', 'A']],
+                info: `
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <strong>Problem:</strong> Node A is left-heavy (+2), but left child B is right-heavy (-1). This is a "zig-zag" pattern!
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <strong>Solution:</strong> First <span class="highlight">Left Rotate</span> B, then <span class="highlight">Right Rotate</span> A. Two rotations needed!
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <strong>Result:</strong> C becomes the new root. All balance factors are 0! 🎯
+                    </div>
+                `
+            },
+            RL: {
+                before: [
+                    {id: 'A', x: 200, y: 50, bf: -2},
+                    {id: 'B', x: 300, y: 150, bf: 1},
+                    {id: 'C', x: 250, y: 250, bf: 0}
+                ],
+                edges: [['A', 'B'], ['B', 'C']],
+                after: [
+                    {id: 'C', x: 200, y: 50, bf: 0},
+                    {id: 'A', x: 100, y: 150, bf: 0},
+                    {id: 'B', x: 300, y: 150, bf: 0}
+                ],
+                edgesAfter: [['C', 'A'], ['C', 'B']],
+                info: `
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <strong>Problem:</strong> Node A is right-heavy (-2), but right child B is left-heavy (+1). Another "zig-zag"!
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <strong>Solution:</strong> First <span class="highlight">Right Rotate</span> B, then <span class="highlight">Left Rotate</span> A. Double rotation!
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <strong>Result:</strong> C becomes the new root. Tree is balanced! ✨
+                    </div>
+                `
+            }
+        };
+
+        let currentRotation = null;
+        let animationPhase = 0;
+
+        function drawTree(svgId, nodes, edges, animate = false) {
+            const svg = document.getElementById(svgId);
+            svg.innerHTML = '';
+
+            // Draw edges first
+            edges.forEach(([parent, child]) => {
+                const parentNode = nodes.find(n => n.id === parent);
+                const childNode = nodes.find(n => n.id === child);
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', parentNode.x);
+                line.setAttribute('y1', parentNode.y + 20);
+                line.setAttribute('x2', childNode.x);
+                line.setAttribute('y2', childNode.y - 20);
+                line.setAttribute('class', 'edge');
+                
+                if (animate) {
+                    line.style.opacity = '0';
+                    setTimeout(() => {
+                        line.style.opacity = '1';
+                    }, 100);
+                }
+                
+                svg.appendChild(line);
+            });
+
+            // Draw nodes
+            nodes.forEach(node => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', `node ${Math.abs(node.bf) > 1 ? 'unbalanced' : 'balanced'}`);
+                g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+                
+                if (animate) {
+                    g.style.opacity = '0';
+                    g.style.transform = `translate(${node.x}px, ${node.y - 50}px)`;
+                    setTimeout(() => {
+                        g.style.opacity = '1';
+                        g.style.transform = `translate(${node.x}px, ${node.y}px)`;
+                    }, 200);
+                }
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('r', 25);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.textContent = node.id;
+                
+                const bfText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                bfText.setAttribute('class', 'balance-factor');
+                bfText.setAttribute('y', 40);
+                bfText.textContent = `BF: ${node.bf > 0 ? '+' : ''}${node.bf}`;
+                
+                g.appendChild(circle);
+                g.appendChild(text);
+                g.appendChild(bfText);
+                svg.appendChild(g);
+            });
+        }
+
+        function showRotation(type) {
+            currentRotation = type;
+            animationPhase = 0;
+            
+            // Update button states
+            document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.btn-${type.toLowerCase()}`).classList.add('active');
+            
+            const data = rotations[type];
+            
+            // Show before state
+            drawTree('beforeSvg', data.before, data.edges, true);
+            
+            // Animate to after state
+            setTimeout(() => {
+                drawTree('afterSvg', data.after, data.edgesAfter, true);
+                document.getElementById('infoContent').innerHTML = data.info;
+            }, 800);
+        }
+
+        // Initialize with LL rotation
+        window.onload = () => {
+            showRotation('LL');
+        };
+    </script>
+</body>
+</html>

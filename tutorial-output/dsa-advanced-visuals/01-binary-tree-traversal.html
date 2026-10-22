@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二叉树遍历动画 - ELI5 可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .analogy-box {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .analogy-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tree-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 400px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .btn-secondary:hover { background: #e0e0e0; }
+        .btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        svg { width: 100%; height: 350px; }
+        .node {
+            fill: #667eea;
+            stroke: #333;
+            stroke-width: 2;
+            transition: all 0.5s ease;
+        }
+        .node.visiting { fill: #f5576c; r: 25; }
+        .node.visited { fill: #50fa7b; }
+        .node-label {
+            fill: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+        .edge {
+            stroke: #999;
+            stroke-width: 2;
+            transition: all 0.5s ease;
+        }
+        .edge.active { stroke: #f5576c; stroke-width: 3; }
+        .output-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Consolas', monospace;
+            font-size: 1.1em;
+            min-height: 60px;
+        }
+        .output-label {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .info-panel {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-left: 5px solid #fdcb6e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .controls { flex-direction: column; }
+            svg { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌳 二叉树遍历动画</h1>
+        <p class="subtitle">超市货架整理类比：三种深度优先遍历方式</p>
+
+        <div class="analogy-box">
+            <div class="analogy-title">
+                <span>💡</span>
+                <span>生活类比：超市货架整理</span>
+            </div>
+            <p style="font-size: 1.1em; line-height: 1.8;">
+                想象你在整理超市的三层货架：<br><br>
+                🏷️ <strong>前序遍历（根左右）</strong>：先看分类标签（根），再整理左边货架（左子树），最后整理右边货架（右子树）<br>
+                📊 <strong>中序遍历（左根右）</strong>：从左到右依次整理，最后贴标签（BST 中得到从小到大顺序）<br>
+                📦 <strong>后序遍历（左右根）</strong>：先整理完左右货架，最后贴分类标签<br><br>
+                <strong>核心思想</strong>：递归三要素——终止条件（货架为空）、当前操作（整理/贴标签）、递归调用（处理子货架）
+            </p>
+        </div>
+
+        <div class="tree-container">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">🎮 交互式遍历演示</h2>
+            
+            <div class="controls">
+                <button class="btn btn-primary" onclick="startTraversal('preorder')">前序遍历</button>
+                <button class="btn btn-primary" onclick="startTraversal('inorder')">中序遍历</button>
+                <button class="btn btn-primary" onclick="startTraversal('postorder')">后序遍历</button>
+                <button class="btn btn-secondary" onclick="resetTree()">重置</button>
+            </div>
+
+            <svg id="treeSvg" viewBox="0 0 800 350">
+                <!-- Edges -->
+                <line class="edge" id="edge-0-1" x1="400" y1="50" x2="250" y2="120"/>
+                <line class="edge" id="edge-0-2" x1="400" y1="50" x2="550" y2="120"/>
+                <line class="edge" id="edge-1-3" x1="250" y1="120" x2="180" y2="200"/>
+                <line class="edge" id="edge-1-4" x1="250" y1="120" x2="320" y2="200"/>
+                <line class="edge" id="edge-2-5" x1="550" y1="120" x2="480" y2="200"/>
+                <line class="edge" id="edge-2-6" x1="550" y1="120" x2="620" y2="200"/>
+
+                <!-- Nodes -->
+                <circle class="node" id="node-0" cx="400" cy="50" r="20"/>
+                <circle class="node" id="node-1" cx="250" cy="120" r="20"/>
+                <circle class="node" id="node-2" cx="550" cy="120" r="20"/>
+                <circle class="node" id="node-3" cx="180" cy="200" r="20"/>
+                <circle class="node" id="node-4" cx="320" cy="200" r="20"/>
+                <circle class="node" id="node-5" cx="480" cy="200" r="20"/>
+                <circle class="node" id="node-6" cx="620" cy="200" r="20"/>
+
+                <!-- Labels -->
+                <text class="node-label" x="400" y="50">5</text>
+                <text class="node-label" x="250" y="120">3</text>
+                <text class="node-label" x="550" y="120">8</text>
+                <text class="node-label" x="180" y="200">1</text>
+                <text class="node-label" x="320" y="200">4</text>
+                <text class="node-label" x="480" y="200">7</text>
+                <text class="node-label" x="620" y="200">9</text>
+            </svg>
+
+            <div class="output-box">
+                <div class="output-label">遍历结果：</div>
+                <div id="output">点击按钮开始遍历...</div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3 style="color: #2d3436; margin-bottom: 10px;">🎯 关键要点</h3>
+            <ul style="line-height: 2; padding-left: 20px;">
+                <li><strong>前序遍历</strong>：第一个访问的是根节点，适合复制树结构</li>
+                <li><strong>中序遍历</strong>：BST 中得到升序序列（1 3 4 5 7 8 9）</li>
+                <li><strong>后序遍历</strong>：最后一个访问的是根节点，适合计算表达式树</li>
+                <li><strong>递归本质</strong>：每个子树都是一棵独立的树，用相同规则处理</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const tree = {
+            val: 5,
+            left: {
+                val: 3,
+                left: { val: 1, left: null, right: null },
+                right: { val: 4, left: null, right: null }
+            },
+            right: {
+                val: 8,
+                left: { val: 7, left: null, right: null },
+                right: { val: 9, left: null, right: null }
+            }
+        };
+
+        const nodeMap = {
+            '5': 'node-0', '3': 'node-1', '8': 'node-2',
+            '1': 'node-3', '4': 'node-4', '7': 'node-5', '9': 'node-6'
+        };
+
+        let isAnimating = false;
+
+        function resetTree() {
+            if (isAnimating) return;
+            document.querySelectorAll('.node').forEach(n => {
+                n.classList.remove('visiting', 'visited');
+            });
+            document.querySelectorAll('.edge').forEach(e => {
+                e.classList.remove('active');
+            });
+            document.getElementById('output').textContent = '点击按钮开始遍历...';
+        }
+
+        async function startTraversal(type) {
+            if (isAnimating) return;
+            isAnimating = true;
+            resetTree();
+
+            const output = document.getElementById('output');
+            output.textContent = '';
+            let result = [];
+
+            const visit = async (nodeVal, nodeId) => {
+                const node = document.getElementById(nodeId);
+                node.classList.add('visiting');
+                await sleep(500);
+                result.push(nodeVal);
+                output.textContent = result.join(' → ');
+                node.classList.remove('visiting');
+                node.classList.add('visited');
+                await sleep(300);
+            };
+
+            const traverse = async (node, type) => {
+                if (!node) return;
+                const nodeId = nodeMap[node.val];
+
+                if (type === 'preorder') {
+                    await visit(node.val, nodeId);
+                    await traverse(node.left, type);
+                    await traverse(node.right, type);
+                } else if (type === 'inorder') {
+                    await traverse(node.left, type);
+                    await visit(node.val, nodeId);
+                    await traverse(node.right, type);
+                } else if (type === 'postorder') {
+                    await traverse(node.left, type);
+                    await traverse(node.right, type);
+                    await visit(node.val, nodeId);
+                }
+            };
+
+            await traverse(tree, type);
+            output.innerHTML += '<br><strong>完成！</strong>';
+            isAnimating = false;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
