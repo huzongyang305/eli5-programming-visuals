@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Memory Mapping - 虚拟内存映射</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #0984e3;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        .analogy-box {
+            background: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
+            color: #333;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .analogy-box h2 {
+            margin-bottom: 10px;
+            font-size: 1.8em;
+            color: #2d3436;
+        }
+
+        .analogy-box p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .input-section h3 {
+            color: #0984e3;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            color: #0984e3;
+            min-width: 150px;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 12px;
+            border: 2px solid #0984e3;
+            border-radius: 8px;
+            font-size: 1em;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(9, 132, 227, 0.4);
+        }
+
+        .memory-hierarchy {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .memory-hierarchy h3 {
+            color: #0984e3;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .hierarchy-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hierarchy-level {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .hierarchy-level:hover {
+            transform: scale(1.05);
+        }
+
+        .hierarchy-level.active {
+            animation: levelPulse 1s infinite;
+        }
+
+        @keyframes levelPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
+            50% { box-shadow: 0 0 40px rgba(255, 255, 255, 1); }
+        }
+
+        .level-registers { background: linear-gradient(135deg, #e17055 0%, #d63031 100%); }
+        .level-cache { background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%); }
+        .level-ram { background: linear-gradient(135deg, #00b894 0%, #00cec9 100%); }
+        .level-disk { background: linear-gradient(135deg, #636e72 0%, #2d3436 100%); }
+
+        .hierarchy-level .emoji {
+            font-size: 2em;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .hierarchy-level .name {
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+
+        .hierarchy-level .details {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .arrow-down {
+            font-size: 2em;
+            color: #0984e3;
+            animation: bounceDown 1s infinite;
+        }
+
+        @keyframes bounceDown {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .address-translation {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .address-translation h3 {
+            color: #0984e3;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .address-display {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .address-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .address-label {
+            font-weight: bold;
+            color: #0984e3;
+        }
+
+        .address-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .page-table {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-table h4 {
+            color: #0984e3;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .table-entry {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .table-entry.highlighted {
+            background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .table-entry .vpn {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .table-entry .pfn {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .tlb-cache {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .tlb-cache h3 {
+            color: #0984e3;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .tlb-entries {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .tlb-entry {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .tlb-entry.hit {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            animation: hitFlash 0.5s ease;
+        }
+
+        .tlb-entry.miss {
+            background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+            color: white;
+            animation: missShake 0.5s ease;
+        }
+
+        @keyframes hitFlash {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes missShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .tlb-entry .tag {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .tlb-entry .frame {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h4 {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .hotel-analogy {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .hotel-analogy h4 {
+            color: #0984e3;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .hotel-rooms {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .room {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .room.occupied {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+        }
+
+        .room.reserved {
+            background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%);
+            color: white;
+        }
+
+        .room .room-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .room .guest {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏨 Virtual Memory Mapping</h1>
+        <p class="subtitle">虚拟内存映射可视化演示</p>
+
+        <div class="analogy-box">
+            <h2>🏨 Real-World Analogy: Hotel Room Assignment System</h2>
+            <p>就像酒店房间分配：客人（进程）预订房间号（虚拟地址），但实际入住的房间（物理地址）可能不同。前台的登记簿（页表）记录映射关系，快速查找卡（TLB）加速查询，当房间满了需要整理（页面置换）。</p>
+        </div>
+
+        <div class="input-section">
+            <h3>⚙️ Address Translation Input</h3>
+            <div class="input-group">
+                <label>Virtual Address:</label>
+                <input type="text" id="virtualAddr" placeholder="0x1A3F" value="0x1A3F">
+            </div>
+            <div class="input-group">
+                <label>Page Size:</label>
+                <input type="number" id="pageSize" value="4096" min="256" step="256">
+            </div>
+            <button onclick="translateAddress()">🔍 Translate Address</button>
+            <button onclick="generateRandomAddress()">🎲 Random Address</button>
+        </div>
+
+        <div class="memory-hierarchy">
+            <h3>📊 Memory Hierarchy</h3>
+            <div class="hierarchy-container">
+                <div class="hierarchy-level level-registers" onclick="highlightLevel(this)">
+                    <span class="emoji">⚡</span>
+                    <div class="name">CPU Registers</div>
+                    <div class="details">~1ns access, few bytes</div>
+                </div>
+                <div class="arrow-down">⬇️</div>
+                <div class="hierarchy-level level-cache" onclick="highlightLevel(this)">
+                    <span class="emoji">🚀</span>
+                    <div class="name">Cache Memory (L1/L2/L3)</div>
+                    <div class="details">~5-20ns access, KB-MB range</div>
+                </div>
+                <div class="arrow-down">⬇️</div>
+                <div class="hierarchy-level level-ram" onclick="highlightLevel(this)">
+                    <span class="emoji">💾</span>
+                    <div class="name">Main Memory (RAM)</div>
+                    <div class="details">~100ns access, GB range</div>
+                </div>
+                <div class="arrow-down">⬇️</div>
+                <div class="hierarchy-level level-disk" onclick="highlightLevel(this)">
+                    <span class="emoji">💿</span>
+                    <div class="name">Secondary Storage (Disk/SSD)</div>
+                    <div class="details">~10ms access, TB range</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="address-translation">
+                <h3>🔄 Address Translation Process</h3>
+                
+                <div class="address-display">
+                    <div class="address-row">
+                        <span class="address-label">Virtual Address:</span>
+                        <span class="address-value" id="virtAddrDisplay">0x1A3F</span>
+                    </div>
+                    <div class="address-row">
+                        <span class="address-label">Page Number:</span>
+                        <span class="address-value" id="pageNumDisplay">-</span>
+                    </div>
+                    <div class="address-row">
+                        <span class="address-label">Offset:</span>
+                        <span class="address-value" id="offsetDisplay">-</span>
+                    </div>
+                    <div class="address-row" style="background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%); color: white;">
+                        <span class="address-label" style="color: white;">Physical Address:</span>
+                        <span class="address-value" id="physAddrDisplay" style="color: white;">-</span>
+                    </div>
+                </div>
+
+                <div class="page-table">
+                    <h4>📋 Page Table</h4>
+                    <div class="table-grid" id="pageTableGrid"></div>
+                </div>
+            </div>
+
+            <div class="tlb-cache">
+                <h3>⚡ TLB (Translation Lookaside Buffer)</h3>
+                
+                <div class="tlb-entries" id="tlbEntries"></div>
+
+                <div class="stats-panel">
+                    <div class="stat-card">
+                        <h4>✅ TLB Hits</h4>
+                        <div class="stat-value" id="tlbHits">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>❌ TLB Misses</h4>
+                        <div class="stat-value" id="tlbMisses">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>📊 Hit Rate</h4>
+                        <div class="stat-value" id="hitRate">0%</div>
+                    </div>
+                </div>
+
+                <div class="hotel-analogy">
+                    <h4>🏨 Hotel Room Mapping</h4>
+                    <div class="hotel-rooms" id="hotelRooms"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tlbHits = 0;
+        let tlbMisses = 0;
+        
+        // Page table: VPN -> PFN mapping
+        const pageTable = {
+            0: 5,
+            1: 12,
+            2: 8,
+            3: 15,
+            4: 3,
+            5: 9,
+            6: 14,
+            7: 1
+        };
+
+        // TLB cache (limited entries)
+        let tlbCache = [
+            { tag: 0, frame: 5 },
+            { tag: 1, frame: 12 },
+            { tag: 2, frame: 8 }
+        ];
+
+        function generateRandomAddress() {
+            const randomPage = Math.floor(Math.random() * 8);
+            const randomOffset = Math.floor(Math.random() * 4096);
+            const virtualAddr = (randomPage * 4096 + randomOffset).toString(16).toUpperCase();
+            document.getElementById('virtualAddr').value = `0x${virtualAddr}`;
+        }
+
+        function translateAddress() {
+            const virtAddrStr = document.getElementById('virtualAddr').value;
+            const pageSize = parseInt(document.getElementById('pageSize').value);
+            
+            // Parse virtual address
+            const virtAddr = parseInt(virtAddrStr, 16);
+            const pageNum = Math.floor(virtAddr / pageSize);
+            const offset = virtAddr % pageSize;
+            
+            document.getElementById('virtAddrDisplay').textContent = virtAddrStr;
+            document.getElementById('pageNumDisplay').textContent = pageNum;
+            document.getElementById('offsetDisplay').textContent = `0x${offset.toString(16).toUpperCase()}`;
+            
+            // Check TLB first
+            const tlbEntry = tlbCache.find(entry => entry.tag === pageNum);
+            
+            if (tlbEntry) {
+                // TLB Hit
+                tlbHits++;
+                highlightTLBEntry(pageNum, true);
+                const physAddr = (tlbEntry.frame * pageSize + offset).toString(16).toUpperCase();
+                document.getElementById('physAddrDisplay').textContent = `0x${physAddr}`;
+            } else {
+                // TLB Miss - lookup page table
+                tlbMisses++;
+                highlightTLBEntry(pageNum, false);
+                
+                const frameNumber = pageTable[pageNum];
+                if (frameNumber !== undefined) {
+                    const physAddr = (frameNumber * pageSize + offset).toString(16).toUpperCase();
+                    document.getElementById('physAddrDisplay').textContent = `0x${physAddr}`;
+                    
+                    // Add to TLB (evict oldest if full)
+                    if (tlbCache.length >= 4) {
+                        tlbCache.shift();
+                    }
+                    tlbCache.push({ tag: pageNum, frame: frameNumber });
+                    
+                    setTimeout(() => renderTLB(), 500);
+                } else {
+                    document.getElementById('physAddrDisplay').textContent = 'PAGE FAULT!';
+                }
+            }
+            
+            updateStats();
+            highlightPageTableEntry(pageNum);
+        }
+
+        function highlightTLBEntry(pageNum, isHit) {
+            const entries = document.querySelectorAll('.tlb-entry');
+            entries.forEach((entry, index) => {
+                if (tlbCache[index] && tlbCache[index].tag === pageNum) {
+                    entry.classList.add(isHit ? 'hit' : 'miss');
+                    setTimeout(() => {
+                        entry.classList.remove('hit', 'miss');
+                    }, 1000);
+                }
+            });
+        }
+
+        function highlightPageTableEntry(pageNum) {
+            const entries = document.querySelectorAll('.table-entry');
+            entries.forEach(entry => {
+                entry.classList.remove('highlighted');
+                if (parseInt(entry.querySelector('.vpn').textContent) === pageNum) {
+                    entry.classList.add('highlighted');
+                }
+            });
+        }
+
+        function updateStats() {
+            const total = tlbHits + tlbMisses;
+            const hitRate = total > 0 ? ((tlbHits / total) * 100).toFixed(1) : 0;
+            
+            document.getElementById('tlbHits').textContent = tlbHits;
+            document.getElementById('tlbMisses').textContent = tlbMisses;
+            document.getElementById('hitRate').textContent = `${hitRate}%`;
+        }
+
+        function renderPageTable() {
+            const grid = document.getElementById('pageTableGrid');
+            grid.innerHTML = '';
+            
+            Object.entries(pageTable).forEach(([vpn, pfn]) => {
+                const entry = document.createElement('div');
+                entry.className = 'table-entry';
+                entry.innerHTML = `
+                    <div class="vpn">VPN ${vpn}</div>
+                    <div class="pfn">→ PFN ${pfn}</div>
+                `;
+                grid.appendChild(entry);
+            });
+        }
+
+        function renderTLB() {
+            const container = document.getElementById('tlbEntries');
+            container.innerHTML = '';
+            
+            tlbCache.forEach((entry, index) => {
+                const div = document.createElement('div');
+                div.className = 'tlb-entry';
+                div.innerHTML = `
+                    <div class="tag">Tag: ${entry.tag}</div>
+                    <div class="frame">Frame: ${entry.frame}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderHotelRooms() {
+            const container = document.getElementById('hotelRooms');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 16; i++) {
+                const room = document.createElement('div');
+                room.className = 'room';
+                
+                // Check if this physical frame is mapped
+                const mappedVpn = Object.entries(pageTable).find(([vpn, pfn]) => pfn === i);
+                
+                if (mappedVpn) {
+                    room.classList.add('occupied');
+                    room.innerHTML = `
+                        <div class="room-number">Room ${i}</div>
+                        <div class="guest">Guest P${mappedVpn[0]}</div>
+                    `;
+                } else {
+                    room.innerHTML = `
+                        <div class="room-number">Room ${i}</div>
+                        <div class="guest">Available</div>
+                    `;
+                }
+                
+                container.appendChild(room);
+            }
+        }
+
+        function highlightLevel(element) {
+            document.querySelectorAll('.hierarchy-level').forEach(level => {
+                level.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            setTimeout(() => {
+                element.classList.remove('active');
+            }, 2000);
+        }
+
+        // Initialize
+        window.onload = () => {
+            renderPageTable();
+            renderTLB();
+            renderHotelRooms();
+        };
+    </script>
+</body>
+</html>

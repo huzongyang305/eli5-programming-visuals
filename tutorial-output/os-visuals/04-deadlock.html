@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadlock Formation and Resolution - 死锁形成与解决</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #d63031;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        .analogy-box {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #333;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .analogy-box h2 {
+            margin-bottom: 10px;
+            font-size: 1.8em;
+            color: #e17055;
+        }
+
+        .analogy-box p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .conditions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .condition-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .condition-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .condition-card.active {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        }
+
+        .condition-card h3 {
+            color: #d63031;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .condition-card .emoji {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .condition-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .traffic-simulation {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .traffic-simulation h3 {
+            color: #d63031;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .intersection {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background: linear-gradient(to bottom, #2d3436 0%, #636e72 100%);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .road {
+            position: absolute;
+            background: #b2bec3;
+        }
+
+        .road.horizontal {
+            width: 100%;
+            height: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .road.vertical {
+            width: 80px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .car {
+            position: absolute;
+            width: 50px;
+            height: 30px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            transition: all 0.5s ease;
+            z-index: 10;
+        }
+
+        .car.deadlocked {
+            animation: deadlockPulse 1s infinite;
+        }
+
+        @keyframes deadlockPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .resource-graph {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .resource-graph h3 {
+            color: #d63031;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        svg.graph-svg {
+            width: 100%;
+            height: 350px;
+        }
+
+        .graph-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .graph-node:hover {
+            filter: brightness(1.2);
+        }
+
+        .process-node circle {
+            fill: #74b9ff;
+            stroke: #0984e3;
+            stroke-width: 3;
+        }
+
+        .resource-node rect {
+            fill: #fdcb6e;
+            stroke: #f39c12;
+            stroke-width: 3;
+        }
+
+        .edge {
+            stroke: #636e72;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .edge.request {
+            stroke: #e17055;
+            stroke-dasharray: 5, 5;
+        }
+
+        .edge.assignment {
+            stroke: #00b894;
+        }
+
+        .controls-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .controls-section h3 {
+            color: #d63031;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .control-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-create-deadlock { background: linear-gradient(135deg, #d63031 0%, #e17055 100%); color: white; }
+        .btn-prevent { background: linear-gradient(135deg, #00b894 0%, #00cec9 100%); color: white; }
+        .btn-banker { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); color: white; }
+        .btn-resolve { background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%); color: white; }
+
+        .banker-algorithm {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .banker-algorithm h4 {
+            color: #6c5ce7;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .matrix-table th {
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+            color: white;
+        }
+
+        .safe-sequence {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .unsafe-warning {
+            background: linear-gradient(135deg, #d63031 0%, #e17055 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .status-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-panel h4 {
+            color: #d63031;
+            margin-bottom: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .status-label {
+            font-weight: bold;
+            color: #666;
+        }
+
+        .status-value {
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8em; }
+            .container { padding: 15px; }
+            .intersection { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚦 Deadlock Formation and Resolution</h1>
+        <p class="subtitle">死锁形成与解决可视化演示</p>
+
+        <div class="analogy-box">
+            <h2>🚗 Real-World Analogy: Traffic Intersection Gridlock</h2>
+            <p>就像十字路口的交通死锁：四辆车同时到达，每辆车都在等待另一辆车让行，结果谁也动不了。这就是死锁——每个进程都持有资源并等待其他资源，形成循环等待。</p>
+        </div>
+
+        <div class="conditions-grid">
+            <div class="condition-card" onclick="toggleCondition(this)">
+                <span class="emoji">🔒</span>
+                <h3>Mutual Exclusion</h3>
+                <p>互斥条件：资源一次只能被一个进程使用，就像十字路口同一时间只能有一个方向通行。</p>
+            </div>
+            <div class="condition-card" onclick="toggleCondition(this)">
+                <span class="emoji">✋</span>
+                <h3>Hold and Wait</h3>
+                <p>占有并等待：进程持有资源的同时等待其他资源，就像车停在路口还等着前面的车走。</p>
+            </div>
+            <div class="condition-card" onclick="toggleCondition(this)">
+                <span class="emoji">🚫</span>
+                <h3>No Preemption</h3>
+                <p>不可剥夺：资源不能被强制收回，就像不能强行把别人的车推开。</p>
+            </div>
+            <div class="condition-card" onclick="toggleCondition(this)">
+                <span class="emoji">🔄</span>
+                <h3>Circular Wait</h3>
+                <p>循环等待：形成环形等待链，A等B，B等C，C等A，就像四辆车互相卡住。</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="traffic-simulation">
+                <h3>🚦 Traffic Intersection Simulation</h3>
+                <div class="intersection" id="intersection">
+                    <div class="road horizontal"></div>
+                    <div class="road vertical"></div>
+                    
+                    <div class="car" id="car1" style="top: 185px; left: 20px; background: #e17055;">🚗</div>
+                    <div class="car" id="car2" style="top: 20px; left: 275px; background: #0984e3;">🚙</div>
+                    <div class="car" id="car3" style="top: 185px; right: 20px; background: #00b894;">🚕</div>
+                    <div class="car" id="car4" style="bottom: 20px; left: 275px; background: #fdcb6e;">🚓</div>
+                </div>
+                
+                <div class="status-panel">
+                    <h4>Current Status</h4>
+                    <div class="status-item">
+                        <span class="status-label">Deadlock State:</span>
+                        <span class="status-value" id="deadlockStatus">No Deadlock</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Cars Blocked:</span>
+                        <span class="status-value" id="blockedCars">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="resource-graph">
+                <h3>📊 Resource Allocation Graph</h3>
+                <svg class="graph-svg" viewBox="0 0 500 350">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="#636e72" />
+                        </marker>
+                    </defs>
+                    
+                    <!-- Processes -->
+                    <g class="graph-node process-node" id="proc1">
+                        <circle cx="100" cy="80" r="30" />
+                        <text x="100" y="85" text-anchor="middle" fill="white" font-weight="bold">P1</text>
+                    </g>
+                    
+                    <g class="graph-node process-node" id="proc2">
+                        <circle cx="400" cy="80" r="30" />
+                        <text x="400" y="85" text-anchor="middle" fill="white" font-weight="bold">P2</text>
+                    </g>
+                    
+                    <g class="graph-node process-node" id="proc3">
+                        <circle cx="100" cy="270" r="30" />
+                        <text x="100" y="275" text-anchor="middle" fill="white" font-weight="bold">P3</text>
+                    </g>
+                    
+                    <g class="graph-node process-node" id="proc4">
+                        <circle cx="400" cy="270" r="30" />
+                        <text x="400" y="275" text-anchor="middle" fill="white" font-weight="bold">P4</text>
+                    </g>
+                    
+                    <!-- Resources -->
+                    <g class="graph-node resource-node" id="res1">
+                        <rect x="220" y="60" width="60" height="40" rx="5" />
+                        <text x="250" y="85" text-anchor="middle" fill="white" font-weight="bold">R1</text>
+                    </g>
+                    
+                    <g class="graph-node resource-node" id="res2">
+                        <rect x="220" y="250" width="60" height="40" rx="5" />
+                        <text x="250" y="275" text-anchor="middle" fill="white" font-weight="bold">R2</text>
+                    </g>
+                    
+                    <!-- Edges -->
+                    <line class="edge assignment" x1="130" y1="80" x2="220" y2="80" />
+                    <line class="edge request" x1="280" y1="80" x2="370" y2="80" />
+                    <line class="edge assignment" x1="400" y1="110" x2="400" y2="240" />
+                    <line class="edge request" x1="370" y1="270" x2="280" y2="270" />
+                    <line class="edge assignment" x1="220" y1="270" x2="130" y2="270" />
+                    <line class="edge request" x1="100" y1="240" x2="100" y2="110" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <h3>🎮 Deadlock Management Controls</h3>
+            <div class="control-buttons">
+                <button class="control-btn btn-create-deadlock" onclick="createDeadlock()">
+                    <span>⚠️</span> Create Deadlock
+                </button>
+                <button class="control-btn btn-prevent" onclick="preventDeadlock()">
+                    <span>🛡️</span> Prevent Deadlock
+                </button>
+                <button class="control-btn btn-banker" onclick="runBankerAlgorithm()">
+                    <span>🏦</span> Banker's Algorithm
+                </button>
+                <button class="control-btn btn-resolve" onclick="resolveDeadlock()">
+                    <span>🔧</span> Resolve Deadlock
+                </button>
+            </div>
+
+            <div class="banker-algorithm" id="bankerPanel" style="display: none;">
+                <h4>🏦 Banker's Algorithm - Safety Check</h4>
+                
+                <h5 style="margin: 15px 0 10px; color: #6c5ce7;">Allocation Matrix</h5>
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th>Process</th>
+                            <th>R1</th>
+                            <th>R2</th>
+                            <th>R3</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allocationMatrix"></tbody>
+                </table>
+
+                <h5 style="margin: 15px 0 10px; color: #6c5ce7;">Max Need Matrix</h5>
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th>Process</th>
+                            <th>R1</th>
+                            <th>R2</th>
+                            <th>R3</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maxMatrix"></tbody>
+                </table>
+
+                <h5 style="margin: 15px 0 10px; color: #6c5ce7;">Available Resources</h5>
+                <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 15px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9em; color: #666;">R1</div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #6c5ce7;" id="availR1">3</div>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9em; color: #666;">R2</div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #6c5ce7;" id="availR2">3</div>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9em; color: #666;">R3</div>
+                        <div style="font-size: 1.5em; font-weight: bold; color: #6c5ce7;" id="availR3">2</div>
+                    </div>
+                </div>
+
+                <div id="safetyResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isDeadlocked = false;
+        let deadlockPrevented = false;
+
+        const allocation = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+            [1, 1, 0]
+        ];
+
+        const maxNeed = [
+            [3, 2, 2],
+            [2, 2, 2],
+            [2, 1, 3],
+            [3, 2, 2]
+        ];
+
+        let available = [3, 3, 2];
+
+        function toggleCondition(card) {
+            card.classList.toggle('active');
+        }
+
+        function createDeadlock() {
+            isDeadlocked = true;
+            deadlockPrevented = false;
+            
+            // Animate cars to intersection center
+            document.getElementById('car1').style.left = '250px';
+            document.getElementById('car2').style.top = '185px';
+            document.getElementById('car3').style.right = '250px';
+            document.getElementById('car4').style.bottom = '185px';
+            
+            // Add deadlock animation
+            setTimeout(() => {
+                document.querySelectorAll('.car').forEach(car => {
+                    car.classList.add('deadlocked');
+                });
+            }, 500);
+            
+            document.getElementById('deadlockStatus').textContent = '⚠️ DEADLOCK DETECTED!';
+            document.getElementById('deadlockStatus').style.color = '#d63031';
+            document.getElementById('blockedCars').textContent = '4';
+            
+            // Highlight circular wait in graph
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.style.strokeWidth = '4';
+            });
+        }
+
+        function preventDeadlock() {
+            isDeadlocked = false;
+            deadlockPrevented = true;
+            
+            // Reset cars
+            document.getElementById('car1').style.left = '20px';
+            document.getElementById('car2').style.top = '20px';
+            document.getElementById('car3').style.right = '20px';
+            document.getElementById('car4').style.bottom = '20px';
+            
+            document.querySelectorAll('.car').forEach(car => {
+                car.classList.remove('deadlocked');
+            });
+            
+            document.getElementById('deadlockStatus').textContent = '✅ Deadlock Prevented';
+            document.getElementById('deadlockStatus').style.color = '#00b894';
+            document.getElementById('blockedCars').textContent = '0';
+            
+            // Reset graph edges
+            document.querySelectorAll('.edge').forEach(edge => {
+                edge.style.strokeWidth = '2';
+            });
+        }
+
+        function resolveDeadlock() {
+            if (!isDeadlocked) {
+                alert('No deadlock to resolve!');
+                return;
+            }
+            
+            // Simulate terminating one process to break deadlock
+            document.getElementById('car2').style.opacity = '0.3';
+            document.getElementById('car2').style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                preventDeadlock();
+                document.getElementById('car2').style.opacity = '1';
+                document.getElementById('car2').style.transform = 'scale(1)';
+            }, 1000);
+            
+            alert('Resolved by terminating Process P2 (preemption strategy)');
+        }
+
+        function runBankerAlgorithm() {
+            const panel = document.getElementById('bankerPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            
+            renderMatrices();
+            checkSafety();
+        }
+
+        function renderMatrices() {
+            const allocBody = document.getElementById('allocationMatrix');
+            const maxBody = document.getElementById('maxMatrix');
+            
+            allocBody.innerHTML = '';
+            maxBody.innerHTML = '';
+            
+            for (let i = 0; i < 4; i++) {
+                const allocRow = document.createElement('tr');
+                allocRow.innerHTML = `
+                    <td><strong>P${i + 1}</strong></td>
+                    <td>${allocation[i][0]}</td>
+                    <td>${allocation[i][1]}</td>
+                    <td>${allocation[i][2]}</td>
+                `;
+                allocBody.appendChild(allocRow);
+                
+                const maxRow = document.createElement('tr');
+                maxRow.innerHTML = `
+                    <td><strong>P${i + 1}</strong></td>
+                    <td>${maxNeed[i][0]}</td>
+                    <td>${maxNeed[i][1]}</td>
+                    <td>${maxNeed[i][2]}</td>
+                `;
+                maxBody.appendChild(maxRow);
+            }
+            
+            document.getElementById('availR1').textContent = available[0];
+            document.getElementById('availR2').textContent = available[1];
+            document.getElementById('availR3').textContent = available[2];
+        }
+
+        function checkSafety() {
+            const work = [...available];
+            const finish = [false, false, false, false];
+            const safeSequence = [];
+            
+            let changed = true;
+            while (changed) {
+                changed = false;
+                for (let i = 0; i < 4; i++) {
+                    if (!finish[i]) {
+                        let canFinish = true;
+                        for (let j = 0; j < 3; j++) {
+                            const need = maxNeed[i][j] - allocation[i][j];
+                            if (need > work[j]) {
+                                canFinish = false;
+                                break;
+                            }
+                        }
+                        
+                        if (canFinish) {
+                            finish[i] = true;
+                            safeSequence.push(`P${i + 1}`);
+                            for (let j = 0; j < 3; j++) {
+                                work[j] += allocation[i][j];
+                            }
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            
+            const resultDiv = document.getElementById('safetyResult');
+            if (safeSequence.length === 4) {
+                resultDiv.innerHTML = `
+                    <div class="safe-sequence">
+                        ✅ System is in SAFE state<br>
+                        Safe Sequence: ${safeSequence.join(' → ')}
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="unsafe-warning">
+                        ⚠️ System is in UNSAFE state<br>
+                        Potential deadlock risk!
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize
+        window.onload = () => {
+            renderMatrices();
+        };
+    </script>
+</body>
+</html>
